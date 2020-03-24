@@ -1,17 +1,6 @@
 // From: www.thegeekstuff.com/2011/12/c-socket-programming
 // Note that port# 5000 is hard-coded into this implementation
 
-/*
-server has to be running the entire time, otherwise the clinets don't have a 
-connectino point to go to
-
-first compoile server "gcc server.c -o server"
-then compoile clients "gcc client.c -o client"
-then run server "./server"
-and client "./client 127.0.0.1"
-tthen it works, cleitn goes to completion, server stays open
-but have to put in the 60 second timer
-*/
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -37,11 +26,11 @@ int main(int argc, char *argv[])
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(5000);       // hardcoded  port number
+    serv_addr.sin_port = htons(5000); 
 
     bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
 
-    listen(listenfd, 10);       // 10 is max num of clients
+    listen(listenfd, 10); 
 
     while(1)
     {

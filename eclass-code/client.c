@@ -1,14 +1,6 @@
 // From: www.thegeekstuff.com/2011/12/c-socket-programming
 // Note that port# 5000 is hard-coded into this implementation
 
-/*
-okay on bottomright it say s"Col", don't let this go past 80 chars iguess
-the way i'm reading it is that with the clients, since each client ==
-one terminal, they keep reading in keybaord inputs or read from a file
-and then continuously porcess/send the inputs to the server
-
-So we do the same thing as assign 2, continuous input
-*/
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
