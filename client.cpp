@@ -1,5 +1,4 @@
 // From: www.thegeekstuff.com/2011/12/c-socket-programming
-// Note that port# 5000 is hard-coded into this implementation
 
 /*
 okay on bottomright it say s"Col", don't let this go past 80 chars iguess
@@ -96,7 +95,7 @@ void setup( int argc, char *argv[] )
 }
 
 
-void clientLoop() 
+void clientLoop( string line ) 
 {
     /*
     if it doesn't read from the socket properly
@@ -141,7 +140,16 @@ int main(int argc, char *argv[])
 {
 
     setup( argc, argv );
-    clientLoop();
+
+    // this works iwth ./client 500 127.0.0.1 <input.txt
+    // file redirection
+    string line;
+    while ( getline( cin, line ) )
+    {
+        cout << line << endl;
+        clientLoop( line );
+    }
+    
 
     return 0;
 
