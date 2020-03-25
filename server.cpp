@@ -1,5 +1,4 @@
 // From: www.thegeekstuff.com/2011/12/c-socket-programming
-// Note that port# 5000 is hard-coded into this implementation
 
 /*
 server has to be running the entire time, otherwise the clinets don't have a 
@@ -25,32 +24,32 @@ but have to put in the 60 second timer
 #include <iostream>
 
 using namespace std;
+/*
+    I made these global so then I can have the main function cleaner by utilizing
+    the void methods
+*/
 
-int main(int argc, char *argv[])
+// listenfd is a socket
+// socket is like adoor
+// both sides make door
+// then later we say "these are the same door"
+int listenfd = 0, connfd = 0;
+// internet socket address
+struct sockaddr_in serv_addr; 
+int portNum;
+char sendBuff[1025];
+
+
+void setup( int argc, char *argv[] )
 {
-    // if( argc != 1 ) 
-    // {
-    //     cout << "Invalid input arguments" << endl;
-    //     return 1;
-    // }
+    if( argc != 2 ) 
+    {
+        cout << "Invalid input arguments" << endl;
+        exit( EXIT_FAILURE );
+    }
 
-    // listenfd is a socket
-    // socket is like adoor
-    // both sides make door
-    // then later we say "these are the same door"
-    int listenfd = 0, connfd = 0;
-
-    // internet socket address
-    struct sockaddr_in serv_addr; 
-
-    char sendBuff[1025];
-    time_t ticks; 
-
-    // where we create the socket door for the server
-    // creats an endpoint connection for communication and returns
-    // a file descriptor that refers to that endpoint
-    // maybe like a pointer to it?
-    listenfd = socket( AF_INET, SOCK_STREAM, 0 );
+    portNum = stoi( argv[1] );
+    cout << "Port number selected: " << portNum << endl;
 
     // set the memory block needed by the server
     // ( Pointer to the block of memory to fill
@@ -62,6 +61,14 @@ int main(int argc, char *argv[])
     memset( &serv_addr, '0', sizeof( serv_addr ) );
     memset( sendBuff, '0', sizeof( sendBuff ) ); 
 
+
+
+    // where we create the socket door for the server
+    // creats an endpoint connection for communication and returns
+    // a file descriptor that refers to that endpoint
+    // maybe like a pointer to it?
+    listenfd = socket( AF_INET, SOCK_STREAM, 0 );
+
     /*
     setting the type of interenet addresses as the IPv4 IP adresses
     */
@@ -72,45 +79,58 @@ int main(int argc, char *argv[])
     */
     serv_addr.sin_addr.s_addr = htonl( INADDR_ANY );
 
-    int portNum = stoi( argv[1] );
-    cout << "Port number selected: " << portNum << endl;
-    serv_addr.sin_port = htons(portNum);       // hardcoded  port number
+    serv_addr.sin_port = htons(portNum);
 
     /*
     binds all the socket info to the currently socket,
     like sends the address to the socket
     */
-    bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
+    bind( listenfd, ( struct sockaddr* ) &serv_addr, sizeof( serv_addr ) ); 
+
 
     /*
     this server/socket can only allow this many ppl
     enables the thing to use accept()
     10 is the length of the cue of incoming messages 
     */
-    listen(listenfd, 10);       // 10 is max num of clients
+    listen( listenfd, 10 );       // 10 is max num of clients
+}
 
-    while(1)
+
+void serverWhileLoop()
+{
+    time_t ticks; 
+    while( 1 )  // servser goes foever
     {
         /*
         extracts the firs tconnection request on the queue of pending 
         connections on the listening socket
         */
-        connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
+        connfd = accept( listenfd, ( struct sockaddr* ) NULL, NULL ); 
 
         /*
         sending the date time to the buffer to be read by the client
         */
-        ticks = time(NULL); // time null returns current calendar time
+        ticks = time( NULL ); // time null returns current calendar time
         // (pointer to buffer, max num of bytes, string has
         // at most n-1 length, leaving char for terminating null char, 
         // format string , additional according to format buffer)
-        snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
+        snprintf( sendBuff, sizeof( sendBuff ), "%.24s\r\n", ctime( &ticks ) );
         // writes to a file referred to by the first arg
         // writes what's in sendbuffer to the socket because sendbuff
         // is local, socket is what's the 'sharebuffer'
-        write(connfd, sendBuff, strlen(sendBuff)); 
+        write( connfd, sendBuff, strlen( sendBuff ) ); 
 
-        close(connfd);
-        sleep(1);
+        close( connfd );
+        sleep( 1 );
+
      }
+}
+
+
+int main(int argc, char *argv[])
+{
+    setup( argc, argv );
+    time_t ticks; 
+    serverWhileLoop();
 }

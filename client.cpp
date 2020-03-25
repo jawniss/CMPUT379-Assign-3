@@ -23,24 +23,34 @@ So we do the same thing as assign 2, continuous input
 
 using namespace std;
 
-int main(int argc, char *argv[])
+int sockfd, n, portNum, ipAddressInt;
+char recvBuff[1024];
+
+struct sockaddr_in serv_addr;
+char* ipAddressConstChar;
+
+
+
+void setup( int argc, char *argv[] )
 {
     /*
     sockfd is the socket, the door
     */
-    int sockfd = 0, n = 0;
-    char recvBuff[1024];
-    struct sockaddr_in serv_addr; 
+    sockfd = 0;
+    n = 0;
 
-    if( argc != 3 )
+
+
+    if( argc != 3 ) // put input error here too
     {
         printf("\n Usage: %s <ip of server> \n",argv[0]);
-        return 1;
+        cout << "Invalid input arguments, Exitting" << endl;
+        exit( EXIT_FAILURE );
     } 
 
-    int portNum = stoi( argv[1] );
-    int ipAddressInt = stoi( argv[2] );
-    char* ipAddressConstChar = argv[2];
+    portNum = stoi( argv[1] );
+    ipAddressInt = stoi( argv[2] );
+    ipAddressConstChar = argv[2];
 
     memset( recvBuff, '0', sizeof( recvBuff ) );
 
@@ -53,7 +63,7 @@ int main(int argc, char *argv[])
     if( ( sockfd = socket( AF_INET, SOCK_STREAM, 0 ) ) < 0 )
     {
         printf( "\n Error : Could not create socket \n" );
-        return 1;
+        exit( EXIT_FAILURE );
     } 
 
     memset( &serv_addr, '0', sizeof( serv_addr ) ); 
@@ -70,7 +80,7 @@ int main(int argc, char *argv[])
     if( inet_pton( AF_INET, ipAddressConstChar, &serv_addr.sin_addr ) <= 0 )
     {
         printf("\n inet_pton error occured\n");
-        return 1;
+        exit( EXIT_FAILURE );
     } 
 
     // if it fails to connect
@@ -81,18 +91,25 @@ int main(int argc, char *argv[])
     if( connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
        printf("\n Error : Connect Failed \n");
-       return 1;
+       exit( EXIT_FAILURE );
     } 
+}
 
-    // if it doesn't read from the socket properly
-    // read does not output, returns an int of number of bytes readf
-    // read: ( file descripter, into buffer, number of bytes to read )
-    // On success, the number of bytes read is returned (zero indicates end
-    // of file), and the file position is advanced by this number.
-    // i ouputted n, it was 26. so reads all byes at once.
 
-    // n = the nunber of bytes read, and if it's 0 or less it doens' tdo 
-    // anything
+void clientLoop() 
+{
+    /*
+    if it doesn't read from the socket properly
+    read does not output, returns an int of number of bytes readf
+    read: ( file descripter, into buffer, number of bytes to read )
+    On success, the number of bytes read is returned (zero indicates end
+    of file), and the file position is advanced by this number.
+    i ouputted n, it was 26. so reads all byes at once.
+
+    n = the nunber of bytes read, and if it's 0 or less it doens' tdo 
+    anything
+    */
+
 
     while ( ( n = read( sockfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
     {
@@ -105,6 +122,7 @@ int main(int argc, char *argv[])
         sets end of string
         */
         recvBuff[n] = 0;
+        
         // prints everything inside the bufffer
         if( fputs(recvBuff, stdout) == EOF )
         {
@@ -112,10 +130,19 @@ int main(int argc, char *argv[])
         }
     } 
 
-    if(n < 0)
+    if( n < 0 )
     {
         printf("\n Read error \n");
     } 
+}
+
+
+int main(int argc, char *argv[])
+{
+
+    setup( argc, argv );
+    clientLoop();
 
     return 0;
+
 }
