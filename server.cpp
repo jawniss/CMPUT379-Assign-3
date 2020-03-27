@@ -24,6 +24,9 @@ but have to put in the 60 second timer
 #include <iostream>
 
 using namespace std;
+
+void Trans( int n );    // Forward declarations of the provided functions without using header file
+void Sleep( int n );
 /*
     I made these global so then I can have the main function cleaner by utilizing
     the void methods
@@ -42,15 +45,21 @@ char sendBuff[1025];
 
 void setup( int argc, char *argv[] )
 {
-    if( argc != 2 ) 
+    if( argc != 2 )     // maybe later i should change these to ask again? possible?
     {
         cout << "Invalid input arguments" << endl;
         exit( EXIT_FAILURE );
     }
 
     portNum = stoi( argv[1] );
-    cout << "Port number selected: " << portNum << endl;
 
+    if( portNum < 5000 or portNum > 64000 )
+    {
+        cout << "Port number must be between 5000 and 64,000" << endl;
+        exit( EXIT_FAILURE );
+    } else {
+        cout << "Port number selected: " << portNum << endl;
+    }
     // set the memory block needed by the server
     // ( Pointer to the block of memory to fill
     // , Value to be set. The value is passed as an int, 

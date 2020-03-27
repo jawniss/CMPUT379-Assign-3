@@ -22,12 +22,18 @@ So we do the same thing as assign 2, continuous input
 
 using namespace std;
 
+void Trans( int n );    // Forward declarations of the provided functions without using header file
+void Sleep( int n );
+
+/*
+    Made these globals as to have a cleaner main function
+*/
+
 int sockfd, n, portNum, ipAddressInt;
 char recvBuff[1024];
 
 struct sockaddr_in serv_addr;
 char* ipAddressConstChar;
-
 
 
 void setup( int argc, char *argv[] )
@@ -39,7 +45,6 @@ void setup( int argc, char *argv[] )
     n = 0;
 
 
-
     if( argc != 3 ) // put input error here too
     {
         printf("\n Usage: %s <ip of server> \n",argv[0]);
@@ -48,6 +53,13 @@ void setup( int argc, char *argv[] )
     } 
 
     portNum = stoi( argv[1] );
+
+    if( portNum < 5000 or portNum > 64000 )
+    {
+        cout << "Port number must be between 5000 and 64,000" << endl;
+        exit( EXIT_FAILURE );
+    }
+
     ipAddressInt = stoi( argv[2] );
     ipAddressConstChar = argv[2];
 
@@ -95,8 +107,32 @@ void setup( int argc, char *argv[] )
 }
 
 
+void splitInput( string inputCommand )
+{
+    int inputSize = inputCommand.length(); 
+  
+    // declaring character array 
+    char splitCommand[ inputSize + 1 ]; 
+  
+    // copying the contents of the 
+    // string to char array 
+    strcpy( splitCommand, inputCommand.c_str() ); 
+    int nTime = ( int ) splitCommand[2];
+
+    if( splitCommand[0] == 'S' ) 
+    {
+        Sleep( nTime );
+    } else if( splitCommand[0] == 'T' ) {
+        // send the T<N> command
+    }
+}
+
+
 void clientLoop( string line ) 
 {
+    splitInput( line );
+
+
     /*
     if it doesn't read from the socket properly
     read does not output, returns an int of number of bytes readf
@@ -108,9 +144,7 @@ void clientLoop( string line )
     n = the nunber of bytes read, and if it's 0 or less it doens' tdo 
     anything
     */
-
-
-    while ( ( n = read( sockfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
+    while( ( n = read( sockfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
     {
         cout << n << endl;
         // this sets the end of whatever was read into the buffer to zero
