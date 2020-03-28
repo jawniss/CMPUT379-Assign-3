@@ -147,31 +147,33 @@ void clientLoop( string line )
     n = the nunber of bytes read, and if it's 0 or less it doens' tdo 
     anything
     */
-   cout << "client" << endl;
-    while( ( n = read( sockfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
-    {
-        cout << n << endl;
-        // this sets the end of whatever was read into the buffer to zero
-        /*
-        if buffer reads in a, b and c, n = 3.
-        so buffer[3] == 0;
-        zero is the terminating character, sending info that this is the end
-        sets end of string
-        */
-        recvBuff[n] = 0;
-        
-        // prints everything inside the bufffer
-        if( fputs(recvBuff, stdout) == EOF )
-        {
-            printf("\n Error : Fputs error\n");
-        }
-    } 
-    cout << "client 2" << endl;
+   cout << "Client before read" << endl;
 
-    if( n < 0 )
-    {
-        printf("\n Read error \n");
-    } 
+        if( ( n = read( sockfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
+        {
+            cout << n << endl;
+            // this sets the end of whatever was read into the buffer to zero
+            /*
+            if buffer reads in a, b and c, n = 3.
+            so buffer[3] == 0;
+            zero is the terminating character, sending info that this is the end
+            sets end of string
+            */
+            recvBuff[n] = 0;
+            
+            // prints everything inside the bufffer
+            if( fputs(recvBuff, stdout) == EOF )
+            {
+                printf("\n Error : Fputs error\n");
+            }
+        } 
+        cout << "After read" << endl;
+
+        if( n < 0 )
+        {
+            printf("\n Read error \n");
+        } 
+   
 }
 
 
@@ -191,7 +193,7 @@ int main(int argc, char *argv[])
     // if it breaks out of this loop ctr+D was pressed, can
     // send a terminating character to the buffer to signal
     // client is done
-    snprintf( sendBuff, sizeof( sendBuff ), "Client finished" );
+    snprintf( sendBuff, sizeof( sendBuff ), "done" );
     write( sockfd, sendBuff, strlen( sendBuff ) );
 
     return 0;

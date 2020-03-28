@@ -110,6 +110,12 @@ void setup( int argc, char *argv[] )
 void serverWhileLoop()
 {
     time_t ticks; 
+    /*
+        The problem rn is that the serever connects to one client,
+        reads from that client once,
+        closes the connection then looks for the next client.
+        Need to make it keep looping for the client.
+    */
     while( 1 )  // servser goes foever
     {
         cout << "Start of loop" << endl;
@@ -140,27 +146,33 @@ void serverWhileLoop()
             write( connfd, sendBuff, strlen( sendBuff ) ); 
        }
        
+       cout << "Entering while loop" <<endl;
         // it waits here
-        if( ( n = read( connfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
+        while( recvBuff[0] != 'd' )
         {
-            cout << n << endl;
-            // this sets the end of whatever was read into the buffer to zero
-            /*
-            if buffer reads in a, b and c, n = 3.
-            so buffer[3] == 0;
-            zero is the terminating character, sending info that this is the end
-            sets end of string
-            */
-            recvBuff[n] = 0;
-            
-            // prints everything inside the bufffer
-            if( fputs(recvBuff, stdout) == EOF )
+            if( ( n = read( connfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
             {
-                printf("\n Error : Fputs error\n");
-            }
-        } 
+                cout << n << endl;
+                // this sets the end of whatever was read into the buffer to zero
+                /*
+                if buffer reads in a, b and c, n = 3.
+                so buffer[3] == 0;
+                zero is the terminating character, sending info that this is the end
+                sets end of string
+                */
+                recvBuff[n] = 0;
+                cout << "before fputs" << endl;
+                // prints everything inside the bufffer
+                if( fputs(recvBuff, stdout) == EOF )
+                {
+                    printf("\n Error : Fputs error\n");
+                }
 
-        cout << "after read" << endl;
+                cout << "after fputs" << endl;
+            } 
+        }
+
+        cout << "after while lloop" << endl;
 
         if( n < 0 )
         {
