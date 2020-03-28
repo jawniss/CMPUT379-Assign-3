@@ -148,11 +148,15 @@ void serverWhileLoop()
        
        cout << "Entering while loop" <<endl;
         // it waits here
+        /*
+        gets stuck cus the server is not sending anything to the buffer,
+        just reading
+        */
         while( recvBuff[0] != 'd' )
         {
             if( ( n = read( connfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
             {
-                cout << n << endl;
+                // cout << n << endl;
                 // this sets the end of whatever was read into the buffer to zero
                 /*
                 if buffer reads in a, b and c, n = 3.
@@ -161,6 +165,11 @@ void serverWhileLoop()
                 sets end of string
                 */
                 recvBuff[n] = 0;
+                // int nTime = ( int ) recvBuff[0];
+                // Trans( nTime );
+                snprintf( sendBuff, sizeof( sendBuff ), "%.24s\r\n", ctime( &ticks ) );
+                write( connfd, sendBuff, strlen( sendBuff ) );
+
                 cout << "before fputs" << endl;
                 // prints everything inside the bufffer
                 if( fputs(recvBuff, stdout) == EOF )
