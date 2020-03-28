@@ -19,7 +19,9 @@ but have to put in the 60 second timer
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/poll.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <time.h> 
 #include <iostream>
 
@@ -36,12 +38,13 @@ void Sleep( int n );
 // socket is like adoor
 // both sides make door
 // then later we say "these are the same door"
-int listenfd = 0, connfd = 0;
+int listenfd = 0, connfd = 0, rc = 1, on = 1, timeout;
 // internet socket address
 struct sockaddr_in serv_addr; 
 int portNum, n;
 char sendBuff[1025];
 char recvBuff[1024];
+struct pollfd fds[200];
 
 
 void setup( int argc, char *argv[] )
@@ -79,6 +82,31 @@ void setup( int argc, char *argv[] )
     // maybe like a pointer to it?
     listenfd = socket( AF_INET, SOCK_STREAM, 0 );
 
+    /*************************************************************/
+  /* Allow socket descriptor to be reuseable                   */
+  /*************************************************************/
+  rc = setsockopt(listenfd, SOL_SOCKET,  SO_REUSEADDR,
+                  (char *)&on, sizeof(on));
+  if (rc < 0)
+  {
+    perror("setsockopt() failed");
+    close(listenfd);
+    exit(-1);
+  }
+
+  /*************************************************************/
+  /* Set socket to be nonblocking. All of the sockets for      */
+  /* the incoming connections will also be nonblocking since   */
+  /* they will inherit that state from the listening socket.   */
+  /*************************************************************/
+  rc = ioctl(listenfd, FIONBIO, (char *)&on);
+  if (rc < 0)
+  {
+    perror("ioctl() failed");
+    close(listenfd);
+    exit(-1);
+  }
+
     /*
     setting the type of interenet addresses as the IPv4 IP adresses
     */
@@ -95,18 +123,56 @@ void setup( int argc, char *argv[] )
     binds all the socket info to the currently socket,
     like sends the address to the socket
     */
-    bind( listenfd, ( struct sockaddr* ) &serv_addr, sizeof( serv_addr ) ); 
-
+    // bind( listenfd, ( struct sockaddr* ) &serv_addr, sizeof( serv_addr ) ); 
+    rc = bind(listenfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr));
+    if (rc < 0)
+    {
+        perror("bind() failed");
+        close(listenfd);
+        exit(-1);
+    }
 
     /*
     this server/socket can only allow this many ppl
     enables the thing to use accept()
     10 is the length of the cue of incoming messages 
     */
-    listen( listenfd, 10 );       // 10 is max num of clients
+    // listen( listenfd, 10 );       // 10 is max num of clients
+    /*************************************************************/
+    /* Set the listen back log                                   */
+    /*************************************************************/
+    rc = listen(listenfd, 10);
+    if (rc < 0)
+    {
+        perror("listen() failed");
+        close(listenfd);
+        exit(-1);
+    }
+
+
+    /*************************************************************/
+    /* Initialize the pollfd structure                           */
+    /*************************************************************/
+    memset(fds, 0 , sizeof(fds));
+
+
+    /*************************************************************/
+    /* Set up the initial listening socket                        */
+    /*************************************************************/
+    fds[0].fd = listenfd;
+    fds[0].events = POLLIN;
+    /*************************************************************/
+    /* Initialize the timeout to 3 minutes. If no                */
+    /* activity after 3 minutes this program will end.           */
+    /* timeout value is based on milliseconds.                   */
+    /*************************************************************/
+    timeout = (3 * 60 * 1000);
 }
 
-
+/*
+    This current loop methoding does not work for multiple clients
+    trying to access
+*/
 void serverWhileLoop()
 {
     time_t ticks; 
@@ -116,7 +182,7 @@ void serverWhileLoop()
         closes the connection then looks for the next client.
         Need to make it keep looping for the client.
     */
-    while( 1 )  // servser goes foever
+    while( 1 )  // servser goes foever, need to implment 60 sec timer
     {
         cout << "Start of loop" << endl;
         /*
@@ -167,17 +233,18 @@ void serverWhileLoop()
                 recvBuff[n] = 0;
                 // int nTime = ( int ) recvBuff[0];
                 // Trans( nTime );
+                ticks = time( NULL );
                 snprintf( sendBuff, sizeof( sendBuff ), "%.24s\r\n", ctime( &ticks ) );
                 write( connfd, sendBuff, strlen( sendBuff ) );
 
-                cout << "before fputs" << endl;
+                // cout << "before fputs" << endl;
                 // prints everything inside the bufffer
                 if( fputs(recvBuff, stdout) == EOF )
                 {
                     printf("\n Error : Fputs error\n");
                 }
 
-                cout << "after fputs" << endl;
+                // cout << "after fputs" << endl;
             } 
         }
 

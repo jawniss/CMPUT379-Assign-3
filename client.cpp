@@ -110,6 +110,7 @@ void setup( int argc, char *argv[] )
 
 void splitInput( string inputCommand )
 {
+    // only supposed to be T50 or S100 inputs
     int inputSize = inputCommand.length(); 
   
     // declaring character array 
