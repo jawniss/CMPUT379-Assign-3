@@ -31,6 +31,7 @@ void Sleep( int n );
 
 int sockfd, n, portNum, ipAddressInt;
 char recvBuff[1024];
+char sendBuff[1025];
 
 struct sockaddr_in serv_addr;
 char* ipAddressConstChar;
@@ -124,6 +125,8 @@ void splitInput( string inputCommand )
         Sleep( nTime );
     } else if( splitCommand[0] == 'T' ) {
         // send the T<N> command
+        snprintf( sendBuff, sizeof( sendBuff ), "Hello from client" );
+        write( sockfd, sendBuff, strlen( sendBuff ) );
     }
 }
 
@@ -144,6 +147,7 @@ void clientLoop( string line )
     n = the nunber of bytes read, and if it's 0 or less it doens' tdo 
     anything
     */
+   cout << "client" << endl;
     while( ( n = read( sockfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
     {
         cout << n << endl;
@@ -162,6 +166,7 @@ void clientLoop( string line )
             printf("\n Error : Fputs error\n");
         }
     } 
+    cout << "client 2" << endl;
 
     if( n < 0 )
     {
@@ -183,7 +188,11 @@ int main(int argc, char *argv[])
         cout << line << endl;
         clientLoop( line );
     }
-    
+    // if it breaks out of this loop ctr+D was pressed, can
+    // send a terminating character to the buffer to signal
+    // client is done
+    snprintf( sendBuff, sizeof( sendBuff ), "Client finished" );
+    write( sockfd, sendBuff, strlen( sendBuff ) );
 
     return 0;
 

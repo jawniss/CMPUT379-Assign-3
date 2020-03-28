@@ -39,8 +39,9 @@ void Sleep( int n );
 int listenfd = 0, connfd = 0;
 // internet socket address
 struct sockaddr_in serv_addr; 
-int portNum;
+int portNum, n;
 char sendBuff[1025];
+char recvBuff[1024];
 
 
 void setup( int argc, char *argv[] )
@@ -111,29 +112,65 @@ void serverWhileLoop()
     time_t ticks; 
     while( 1 )  // servser goes foever
     {
+        cout << "Start of loop" << endl;
         /*
         extracts the firs tconnection request on the queue of pending 
         connections on the listening socket
         */
-        connfd = accept( listenfd, ( struct sockaddr* ) NULL, NULL ); 
+       // waits here until client connects, once accepted runs through everything
+       if( connfd = accept( listenfd, ( struct sockaddr* ) NULL, NULL ) ) 
+       {
+           cout << "accepted" << endl;
+            // connfd = accept( listenfd, ( struct sockaddr* ) NULL, NULL );
+            /*
+            sending the date time to the buffer to be read by the client
+            */
+            ticks = time( NULL ); // time null returns current calendar time
+            // (pointer to buffer, max num of bytes, string has
+            // at most n-1 length, leaving char for terminating null char, 
+            // format string , additional according to format buffer)
+            cout << "3" << endl;
 
-        /*
-        sending the date time to the buffer to be read by the client
-        */
-        ticks = time( NULL ); // time null returns current calendar time
-        // (pointer to buffer, max num of bytes, string has
-        // at most n-1 length, leaving char for terminating null char, 
-        // format string , additional according to format buffer)
-        snprintf( sendBuff, sizeof( sendBuff ), "%.24s\r\n", ctime( &ticks ) );
-        // writes to a file referred to by the first arg
-        // writes what's in sendbuffer to the socket because sendbuff
-        // is local, socket is what's the 'sharebuffer'
-        write( connfd, sendBuff, strlen( sendBuff ) ); 
+            snprintf( sendBuff, sizeof( sendBuff ), "%.24s\r\n", ctime( &ticks ) );
+            cout << "4" << endl;
+        
+            // writes to a file referred to by the first arg
+            // writes what's in sendbuffer to the socket because sendbuff
+            // is local, socket is what's the 'sharebuffer'
+            write( connfd, sendBuff, strlen( sendBuff ) ); 
+       }
+       
+        // it waits here
+        if( ( n = read( connfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
+        {
+            cout << n << endl;
+            // this sets the end of whatever was read into the buffer to zero
+            /*
+            if buffer reads in a, b and c, n = 3.
+            so buffer[3] == 0;
+            zero is the terminating character, sending info that this is the end
+            sets end of string
+            */
+            recvBuff[n] = 0;
+            
+            // prints everything inside the bufffer
+            if( fputs(recvBuff, stdout) == EOF )
+            {
+                printf("\n Error : Fputs error\n");
+            }
+        } 
 
+        cout << "after read" << endl;
+
+        if( n < 0 )
+        {
+            printf("\n Read error \n");
+        } 
         close( connfd );
         sleep( 1 );
 
      }
+
 }
 
 
