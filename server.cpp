@@ -25,21 +25,35 @@ using namespace std;
 #define FALSE            0
 
 
-int    len, rc, on = 1;
+int    len, rc, on = 1, timeout;
 int    listen_sd = -1, new_sd = -1;
 int    desc_ready, end_server = FALSE, compress_array = FALSE;
 int    close_conn;
-char   buffer[80];
-char   recvBuff[1024];
+char   buffer[1025];
 char   sendBuff[1025];
 struct sockaddr_in6   addr;
-int    timeout;
 struct pollfd fds[200];
 int    nfds = 1, current_size = 0, i, j;
 
 
-void setup()
+void setup( int argc, char *argv[] )
 {
+    if( argc != 2 )     // maybe later i should change these to ask again? possible?
+    {
+        cout << "Invalid input arguments" << endl;
+        exit( EXIT_FAILURE );
+    }
+
+    int portNum = stoi( argv[1] );
+
+    if( portNum < 5000 or portNum > 64000 )
+    {
+        cout << "Port number must be between 5000 and 64,000" << endl;
+        exit( EXIT_FAILURE );
+    } else {
+        cout << "Port number selected: " << portNum << endl;
+    }
+    
     /*************************************************************/
     /* Create an AF_INET6 stream socket to receive incoming      */
     /* connections on                                            */
@@ -82,7 +96,7 @@ void setup()
     memset(&addr, 0, sizeof(addr));
     addr.sin6_family      = AF_INET6;
     memcpy(&addr.sin6_addr, &in6addr_any, sizeof(in6addr_any));
-    addr.sin6_port        = htons(SERVER_PORT);
+    addr.sin6_port        = htons( portNum );
     rc = bind(listen_sd, (struct sockaddr *)&addr, sizeof(addr));
     if (rc < 0)
     {
@@ -372,7 +386,7 @@ void cleanUp()
 
 int main (int argc, char *argv[])
 {
-    setup();
+    setup( argc, argv );
 
     serverLoop();
 
