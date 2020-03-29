@@ -19,6 +19,8 @@ So we do the same thing as assign 2, continuous input
 #include <errno.h>
 #include <arpa/inet.h> 
 #include <iostream>
+#include <string>
+#include <vector>
 
 using namespace std;
 
@@ -113,20 +115,17 @@ void splitInput( string inputCommand )
     // only supposed to be T50 or S100 inputs
     int inputSize = inputCommand.length(); 
   
-    // declaring character array 
-    char splitCommand[ inputSize + 1 ]; 
-  
-    // copying the contents of the 
-    // string to char array 
-    strcpy( splitCommand, inputCommand.c_str() ); 
-    int nTime = ( int ) splitCommand[2];
+    char tOrS = inputCommand.at(0);
+    string commandNum = inputCommand.erase( 0, 1 );
+    int nTime = stoi( commandNum );
+    const char* numToSend = commandNum.c_str();
 
-    if( splitCommand[0] == 'S' ) 
+    if( tOrS == 'S' ) 
     {
         Sleep( nTime );
-    } else if( splitCommand[0] == 'T' ) {
+    } else if( tOrS == 'T' ) {
         // send the T<N> command
-        snprintf( sendBuff, sizeof( sendBuff ), "Hello from client" );
+        snprintf( sendBuff, sizeof( sendBuff ), "%s", numToSend );
         write( sockfd, sendBuff, strlen( sendBuff ) );
     }
 }
@@ -148,11 +147,11 @@ void clientLoop( string line )
     n = the nunber of bytes read, and if it's 0 or less it doens' tdo 
     anything
     */
-   cout << "Client before read" << endl;
+//    cout << "Client before read" << endl;
 
         if( ( n = read( sockfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
         {
-            cout << n << endl;
+            // cout << n << endl;
             // this sets the end of whatever was read into the buffer to zero
             /*
             if buffer reads in a, b and c, n = 3.
@@ -161,14 +160,14 @@ void clientLoop( string line )
             sets end of string
             */
             recvBuff[n] = 0;
-            
+            cout << "Gotten from socket: ";
             // prints everything inside the bufffer
             if( fputs(recvBuff, stdout) == EOF )
             {
                 printf("\n Error : Fputs error\n");
             }
         } 
-        cout << "After read" << endl;
+        // cout << "After read" << endl;
 
         if( n < 0 )
         {
@@ -185,12 +184,34 @@ int main(int argc, char *argv[])
 
     // this works iwth ./client 500 127.0.0.1 <input.txt
     // file redirection
+    // string line;
+    // while ( getline( cin, line ) )
+    // {
+    //     cout << line << endl;
+    //     clientLoop( line );
+    // }
+
+    // string line;
+    // vector< string > commands;
+    // while( getline( cin, line, ' ' ) )
+    // {
+    //     commands.push_back(line);
+    //     clientLoop( commands[0] );
+    //     cout << "Command: " << commands[0] << endl;
+    //     commands.erase( commands.begin() );
+    // }
+
+
     string line;
-    while ( getline( cin, line ) )
+    while ( cin >> line )
     {
         cout << line << endl;
         clientLoop( line );
     }
+
+
+
+
     // if it breaks out of this loop ctr+D was pressed, can
     // send a terminating character to the buffer to signal
     // client is done
