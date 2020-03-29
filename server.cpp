@@ -169,19 +169,6 @@ void serverLoop()
             if(fds[i].revents == 0)
                 continue;
 
-            /*********************************************************/
-            /* If revents is not POLLIN, it's an unexpected result,  */
-            /* log and end the server.                               */
-            /*********************************************************/
-            // if(fds[i].revents != POLLIN)
-            // {
-            //     printf("  Error! revents = %d\n", fds[i].revents);
-            //     end_server = TRUE;
-            //     // close_conn = TRUE;
-            //     break;
-            // }
-
-
             if (fds[i].fd == listen_sd)
             {
                 /*******************************************************/
@@ -197,32 +184,32 @@ void serverLoop()
                 /*******************************************************/
                 do
                 {
-                /*****************************************************/
-                /* Accept each incoming connection. If               */
-                /* accept fails with EWOULDBLOCK, then we            */
-                /* have accepted all of them. Any other              */
-                /* failure on accept will cause us to end the        */
-                /* server.                                           */
-                /*****************************************************/
-                new_sd = accept(listen_sd, NULL, NULL);
-                if (new_sd < 0)
-                {
-                    if (errno != EWOULDBLOCK)
+                    /*****************************************************/
+                    /* Accept each incoming connection. If               */
+                    /* accept fails with EWOULDBLOCK, then we            */
+                    /* have accepted all of them. Any other              */
+                    /* failure on accept will cause us to end the        */
+                    /* server.                                           */
+                    /*****************************************************/
+                    new_sd = accept(listen_sd, NULL, NULL);
+                    if (new_sd < 0)
                     {
-                        perror("  accept() failed");
-                        end_server = TRUE;
+                        if (errno != EWOULDBLOCK)
+                        {
+                            perror("  accept() failed");
+                            end_server = TRUE;
+                        }
+                        break;
                     }
-                    break;
-                }
 
-                /*****************************************************/
-                /* Add the new incoming connection to the            */
-                /* pollfd structure                                  */
-                /*****************************************************/
-                printf("  New incoming connection - %d\n", new_sd);
-                fds[nfds].fd = new_sd;
-                fds[nfds].events = POLLIN;
-                nfds++;
+                    /*****************************************************/
+                    /* Add the new incoming connection to the            */
+                    /* pollfd structure                                  */
+                    /*****************************************************/
+                    printf("  New incoming connection - %d\n", new_sd);
+                    fds[nfds].fd = new_sd;
+                    fds[nfds].events = POLLIN;
+                    nfds++;
 
                 /*****************************************************/
                 /* Loop back up and accept another incoming          */
@@ -255,12 +242,13 @@ void serverLoop()
                     /* connection.                                       */
                     /*****************************************************/
                     rc = read(fds[i].fd, buffer, sizeof(buffer));
+                    buffer[rc] = 0;
                     if (rc < 0)
                     {
                         if (errno != EWOULDBLOCK)
                         {
-                        perror("  recv() failed");
-                        close_conn = TRUE;
+                            perror("  recv() failed");
+                            close_conn = TRUE;
                         }
                         break;
                     }
@@ -282,11 +270,13 @@ void serverLoop()
                     len = rc;
                     printf("  %d bytes received\n", len);
                     
+                    // prints too much, for example if printed 0000
+                    // and next is ab, will print ab00
                     if( fputs(buffer, stdout) == EOF )
                     {
                         printf("\n Error : Fputs error\n");
                     }
-
+                    cout << endl;
 
                     // put the read function here?
 
@@ -331,9 +321,9 @@ void serverLoop()
                 /*******************************************************/
                 if (close_conn)
                 {
-                close(fds[i].fd);
-                fds[i].fd = -1;
-                compress_array = TRUE;
+                    close(fds[i].fd);
+                    fds[i].fd = -1;
+                    compress_array = TRUE;
                 }
 
 
