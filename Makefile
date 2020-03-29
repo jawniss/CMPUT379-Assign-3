@@ -12,10 +12,10 @@ client: client
 # 	g++ client.o tands.o -pthread $(CFLAGS) -o client
 
 server: server.cpp tands.c
-	g++ server.cpp tands.c -o server
+	g++ server.cpp tands.c $(CFLAGS) -o server
 
 client: client.cpp tands.c 
-	g++ client.cpp tands.c -o client
+	g++ client.cpp tands.c $(CFLAGS) -o client
 
 # Compilation commands:
 # server.o: server.cpp

@@ -96,7 +96,7 @@ void setup( int argc, char *argv[] )
     addr.sin_family      = AF_INET;
     // memcpy(&addr.sin_addr, &in6addr_any, sizeof(in6addr_any));
     addr.sin_port        = htons( portNum );
-    rc = bind(listen_sd, (struct sockaddr *)&addr, sizeof(addr));
+    rc = ::bind(listen_sd, (struct sockaddr *)&addr, sizeof(addr));
     if (rc < 0)
     {
         perror("bind() failed");
@@ -118,7 +118,7 @@ void setup( int argc, char *argv[] )
     /*************************************************************/
     /* Initialize the pollfd structure                           */
     /*************************************************************/
-    memset(fds, 0 , sizeof(fds));
+    memset( fds, 0 , sizeof( fds ) );
 
     /*************************************************************/
     /* Set up the initial listening socket                        */
@@ -130,7 +130,7 @@ void setup( int argc, char *argv[] )
     /* activity after 60 seconds this program will end.           */
     /* timeout value is based on milliseconds.                   */
     /*************************************************************/
-    timeout = (60 * 1000);
+    timeout = ( 60 * 1000 );
 }
 
 
@@ -239,7 +239,8 @@ void serverLoop()
             else
             {
                 // This happens evertime new data is sent by the client
-                printf("  Descriptor %d is readable\n", fds[i].fd);
+                // printf("  Descriptor %d is readable\n", fds[i].fd );
+                printf("  Client %d is readable\n", i );
                 close_conn = FALSE;
                 /*******************************************************/
                 /* Receive all incoming data on this socket            */
@@ -254,7 +255,7 @@ void serverLoop()
                     /* failure occurs, we will close the                 */
                     /* connection.                                       */
                     /*****************************************************/
-                    rc = read(fds[i].fd, buffer, sizeof(buffer));
+                    rc = read( fds[i].fd, buffer, sizeof( buffer ) );
                     buffer[rc] = 0;
                     if (rc < 0)
                     {
@@ -286,8 +287,7 @@ void serverLoop()
                     len = rc;
                     printf("  %d bytes received\n", len);
                     
-                    // prints too much, for example if printed 0000
-                    // and next is ab, will print ab00
+                    cout << "Buffer contents: ";
                     if( fputs(buffer, stdout) == EOF )
                     {
                         printf("\n Error : Fputs error\n");
