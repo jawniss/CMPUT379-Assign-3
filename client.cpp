@@ -119,6 +119,7 @@ void splitInput( string inputCommand )
     string commandNum = inputCommand.erase( 0, 1 );
     int nTime = stoi( commandNum );
     const char* numToSend = commandNum.c_str();
+    // cout << nTime << " " << numToSend << endl;
 
     if( tOrS == 'S' ) 
     {
@@ -166,6 +167,7 @@ void clientLoop( string line )
             {
                 printf("\n Error : Fputs error\n");
             }
+            cout << endl;
         } 
         // cout << "After read" << endl;
 

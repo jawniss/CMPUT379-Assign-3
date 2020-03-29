@@ -17,6 +17,8 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_71/rzab6/poll.htm
 #include <time.h> 
 #include <iostream>
 
+using namespace std;
+
 #define SERVER_PORT  6000
 
 #define TRUE             1
@@ -28,6 +30,8 @@ int    listen_sd = -1, new_sd = -1;
 int    desc_ready, end_server = FALSE, compress_array = FALSE;
 int    close_conn;
 char   buffer[80];
+char   recvBuff[1024];
+char   sendBuff[1025];
 struct sockaddr_in6   addr;
 int    timeout;
 struct pollfd fds[200];
@@ -157,153 +161,182 @@ void serverLoop()
         current_size = nfds;
         for (i = 0; i < current_size; i++)
         {
-        /*********************************************************/
-        /* Loop through to find the descriptors that returned    */
-        /* POLLIN and determine whether it's the listening       */
-        /* or the active connection.                             */
-        /*********************************************************/
-        if(fds[i].revents == 0)
-            continue;
+            /*********************************************************/
+            /* Loop through to find the descriptors that returned    */
+            /* POLLIN and determine whether it's the listening       */
+            /* or the active connection.                             */
+            /*********************************************************/
+            if(fds[i].revents == 0)
+                continue;
 
-        /*********************************************************/
-        /* If revents is not POLLIN, it's an unexpected result,  */
-        /* log and end the server.                               */
-        /*********************************************************/
-        if(fds[i].revents != POLLIN)
-        {
-            printf("  Error! revents = %d\n", fds[i].revents);
-            end_server = TRUE;
-            break;
-        }
-
-
-        if (fds[i].fd == listen_sd)
-        {
-            /*******************************************************/
-            /* Listening descriptor is readable.                   */
-            /*******************************************************/
-            printf("  Listening socket is readable\n");
-
-            /*******************************************************/
-            /* Accept all incoming connections that are            */
-            /* queued up on the listening socket before we         */
-            /* loop back and call poll again.                      */
-            /*******************************************************/
-            do
+            /*********************************************************/
+            /* If revents is not POLLIN, it's an unexpected result,  */
+            /* log and end the server.                               */
+            /*********************************************************/
+            if(fds[i].revents != POLLIN)
             {
-            /*****************************************************/
-            /* Accept each incoming connection. If               */
-            /* accept fails with EWOULDBLOCK, then we            */
-            /* have accepted all of them. Any other              */
-            /* failure on accept will cause us to end the        */
-            /* server.                                           */
-            /*****************************************************/
-            new_sd = accept(listen_sd, NULL, NULL);
-            if (new_sd < 0)
-            {
-                if (errno != EWOULDBLOCK)
-                {
-                perror("  accept() failed");
+                printf("  Error! revents = %d\n", fds[i].revents);
                 end_server = TRUE;
-                }
                 break;
             }
 
-            /*****************************************************/
-            /* Add the new incoming connection to the            */
-            /* pollfd structure                                  */
-            /*****************************************************/
-            printf("  New incoming connection - %d\n", new_sd);
-            fds[nfds].fd = new_sd;
-            fds[nfds].events = POLLIN;
-            nfds++;
 
-            /*****************************************************/
-            /* Loop back up and accept another incoming          */
-            /* connection                                        */
-            /*****************************************************/
-            } while (new_sd != -1);
-        }
-
-        /*********************************************************/
-        /* This is not the listening socket, therefore an        */
-        /* existing connection must be readable                  */
-        /*********************************************************/
-
-        else
-        {
-            printf("  Descriptor %d is readable\n", fds[i].fd);
-            close_conn = FALSE;
-            /*******************************************************/
-            /* Receive all incoming data on this socket            */
-            /* before we loop back and call poll again.            */
-            /*******************************************************/
-
-            do
+            if (fds[i].fd == listen_sd)
             {
-            /*****************************************************/
-            /* Receive data on this connection until the         */
-            /* recv fails with EWOULDBLOCK. If any other         */
-            /* failure occurs, we will close the                 */
-            /* connection.                                       */
-            /*****************************************************/
-            rc = recv(fds[i].fd, buffer, sizeof(buffer), 0);
-            if (rc < 0)
-            {
-                if (errno != EWOULDBLOCK)
+                /*******************************************************/
+                /* Listening descriptor is readable.                   */
+                /*******************************************************/
+                // This is printed everytime a new client is connected
+                printf("  Listening socket is readable\n");
+
+                /*******************************************************/
+                /* Accept all incoming connections that are            */
+                /* queued up on the listening socket before we         */
+                /* loop back and call poll again.                      */
+                /*******************************************************/
+                do
                 {
-                perror("  recv() failed");
-                close_conn = TRUE;
+                /*****************************************************/
+                /* Accept each incoming connection. If               */
+                /* accept fails with EWOULDBLOCK, then we            */
+                /* have accepted all of them. Any other              */
+                /* failure on accept will cause us to end the        */
+                /* server.                                           */
+                /*****************************************************/
+                new_sd = accept(listen_sd, NULL, NULL);
+                if (new_sd < 0)
+                {
+                    if (errno != EWOULDBLOCK)
+                    {
+                        perror("  accept() failed");
+                        end_server = TRUE;
+                    }
+                    break;
                 }
-                break;
+
+                /*****************************************************/
+                /* Add the new incoming connection to the            */
+                /* pollfd structure                                  */
+                /*****************************************************/
+                printf("  New incoming connection - %d\n", new_sd);
+                fds[nfds].fd = new_sd;
+                fds[nfds].events = POLLIN;
+                nfds++;
+
+                /*****************************************************/
+                /* Loop back up and accept another incoming          */
+                /* connection                                        */
+                /*****************************************************/
+                } while (new_sd != -1);
             }
 
-            /*****************************************************/
-            /* Check to see if the connection has been           */
-            /* closed by the client                              */
-            /*****************************************************/
-            if (rc == 0)
+            /*********************************************************/
+            /* This is not the listening socket, therefore an        */
+            /* existing connection must be readable                  */
+            /*********************************************************/
+
+            else
             {
-                printf("  Connection closed\n");
-                close_conn = TRUE;
-                break;
-            }
+                // This happens evertime new data is sent by the client
+                printf("  Descriptor %d is readable\n", fds[i].fd);
+                close_conn = FALSE;
+                /*******************************************************/
+                /* Receive all incoming data on this socket            */
+                /* before we loop back and call poll again.            */
+                /*******************************************************/
 
-            /*****************************************************/
-            /* Data was received                                 */
-            /*****************************************************/
-            len = rc;
-            printf("  %d bytes received\n", len);
-            // put the read function here?
+                do
+                {
+                    /*****************************************************/
+                    /* Receive data on this connection until the         */
+                    /* recv fails with EWOULDBLOCK. If any other         */
+                    /* failure occurs, we will close the                 */
+                    /* connection.                                       */
+                    /*****************************************************/
+                    rc = read(fds[i].fd, buffer, sizeof(buffer));
+                    if (rc < 0)
+                    {
+                        if (errno != EWOULDBLOCK)
+                        {
+                        perror("  recv() failed");
+                        close_conn = TRUE;
+                        }
+                        break;
+                    }
 
-            /*****************************************************/
-            /* Echo the data back to the client                  */
-            /*****************************************************/
-            rc = send(fds[i].fd, buffer, len, 0);
-            if (rc < 0)
-            {
-                perror("  send() failed");
-                close_conn = TRUE;
-                break;
-            }
+                    /*****************************************************/
+                    /* Check to see if the connection has been           */
+                    /* closed by the client                              */
+                    /*****************************************************/
+                    if (rc == 0)
+                    {
+                        printf("  Connection closed\n");
+                        close_conn = TRUE;
+                        break;
+                    }
 
-            } while(TRUE);
-
-            /*******************************************************/
-            /* If the close_conn flag was turned on, we need       */
-            /* to clean up this active connection. This            */
-            /* clean up process includes removing the              */
-            /* descriptor.                                         */
-            /*******************************************************/
-            if (close_conn)
-            {
-            close(fds[i].fd);
-            fds[i].fd = -1;
-            compress_array = TRUE;
-            }
+                    /*****************************************************/
+                    /* Data was received                                 */
+                    /*****************************************************/
+                    len = rc;
+                    printf("  %d bytes received\n", len);
+                    
+                    if( fputs(buffer, stdout) == EOF )
+                    {
+                        printf("\n Error : Fputs error\n");
+                    }
 
 
-        }  /* End of existing connection is readable             */
+                    // put the read function here?
+
+
+
+                    /*
+                        read the number from the socket
+                            if number is EOF, close connection
+                        do the trans(n )
+
+                    */
+
+
+                    // trans function
+
+                    snprintf( sendBuff, sizeof( sendBuff ), "got it" );
+                    // snprintf( sendBuff, sizeof( sendBuff ), "%s", numToSend );
+                    // write( listen_sd, sendBuff, strlen( sendBuff ) );
+
+
+
+
+                    /*****************************************************/
+                    /* Echo the data back to the client                  */
+                    /*****************************************************/
+                    // rc = send(fds[i].fd, buffer, len, 0);
+                    rc = send(fds[i].fd, sendBuff, 7, 0);
+                    if (rc < 0)
+                    {
+                        perror("  send() failed");
+                        close_conn = TRUE;
+                        break;
+                    }
+
+                } while(TRUE);
+
+                /*******************************************************/
+                /* If the close_conn flag was turned on, we need       */
+                /* to clean up this active connection. This            */
+                /* clean up process includes removing the              */
+                /* descriptor.                                         */
+                /*******************************************************/
+                if (close_conn)
+                {
+                close(fds[i].fd);
+                fds[i].fd = -1;
+                compress_array = TRUE;
+                }
+
+
+            }  /* End of existing connection is readable             */
         } /* End of loop through pollable descriptors              */
 
         /***********************************************************/
