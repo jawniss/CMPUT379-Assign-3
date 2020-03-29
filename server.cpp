@@ -19,11 +19,8 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_71/rzab6/poll.htm
 
 using namespace std;
 
-#define SERVER_PORT  6000
-
 #define TRUE             1
 #define FALSE            0
-
 
 int    len, rc, on = 1, timeout;
 int    listen_sd = -1, new_sd = -1;
@@ -31,7 +28,7 @@ int    desc_ready, end_server = FALSE, compress_array = FALSE;
 int    close_conn;
 char   buffer[1025];
 char   sendBuff[1025];
-struct sockaddr_in6   addr;
+struct sockaddr_in   addr;
 struct pollfd fds[200];
 int    nfds = 1, current_size = 0, i, j;
 
@@ -58,7 +55,7 @@ void setup( int argc, char *argv[] )
     /* Create an AF_INET6 stream socket to receive incoming      */
     /* connections on                                            */
     /*************************************************************/
-    listen_sd = socket(AF_INET6, SOCK_STREAM, 0);
+    listen_sd = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_sd < 0)
     {
         perror("socket() failed");
@@ -94,9 +91,11 @@ void setup( int argc, char *argv[] )
     /* Bind the socket                                           */
     /*************************************************************/
     memset(&addr, 0, sizeof(addr));
-    addr.sin6_family      = AF_INET6;
-    memcpy(&addr.sin6_addr, &in6addr_any, sizeof(in6addr_any));
-    addr.sin6_port        = htons( portNum );
+    memset( sendBuff, '0', sizeof( sendBuff ) );
+    memset( buffer, '0', sizeof( buffer ) );
+    addr.sin_family      = AF_INET;
+    // memcpy(&addr.sin_addr, &in6addr_any, sizeof(in6addr_any));
+    addr.sin_port        = htons( portNum );
     rc = bind(listen_sd, (struct sockaddr *)&addr, sizeof(addr));
     if (rc < 0)
     {
@@ -261,8 +260,11 @@ void serverLoop()
                     {
                         if (errno != EWOULDBLOCK)
                         {
+                            // this is wheer "connection reset by peer" 
+                            // is written cus it's perror
                             perror("  recv() failed");
                             close_conn = TRUE;
+
                         }
                         break;
                     }
