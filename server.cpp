@@ -173,12 +173,13 @@ void serverLoop()
             /* If revents is not POLLIN, it's an unexpected result,  */
             /* log and end the server.                               */
             /*********************************************************/
-            if(fds[i].revents != POLLIN)
-            {
-                printf("  Error! revents = %d\n", fds[i].revents);
-                end_server = TRUE;
-                break;
-            }
+            // if(fds[i].revents != POLLIN)
+            // {
+            //     printf("  Error! revents = %d\n", fds[i].revents);
+            //     end_server = TRUE;
+            //     // close_conn = TRUE;
+            //     break;
+            // }
 
 
             if (fds[i].fd == listen_sd)
