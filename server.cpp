@@ -19,6 +19,9 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_71/rzab6/poll.htm
 
 using namespace std;
 
+void Trans( int n );    // Forward declarations of the provided functions without using header file
+void Sleep( int n );
+
 #define TRUE             1
 #define FALSE            0
 
@@ -297,6 +300,19 @@ void serverLoop()
                     // put the read function here?
 
 
+
+                    // sscanf messes up the buffer meant for sending, so i copy it
+
+                    // int i;
+                    // sscanf(buffer, "%d", &i);
+                    // cout << "I: " << i << endl;
+                    string stringInt( buffer );
+                    // cout << "Buffer: " << buffer << endl;
+                    // cout << "Stringint: " << stringInt << endl;
+
+                    int nTime = std::stoi( stringInt );
+
+                    Trans( nTime );
 
                     /*
                         read the number from the socket

@@ -20,7 +20,6 @@ So we do the same thing as assign 2, continuous input
 #include <arpa/inet.h> 
 #include <iostream>
 #include <string>
-#include <vector>
 
 using namespace std;
 
@@ -32,6 +31,7 @@ void Sleep( int n );
 */
 
 int sockfd, n, portNum, ipAddressInt;
+bool commandIsSleep = false;
 char recvBuff[1024];
 char sendBuff[1025];
 
@@ -117,15 +117,19 @@ void splitInput( string inputCommand )
   
     char tOrS = inputCommand.at(0);
     string commandNum = inputCommand.erase( 0, 1 );
-    int nTime = stoi( commandNum );
+    int nTime = std::stoi( commandNum );
     const char* numToSend = commandNum.c_str();
     // cout << nTime << " " << numToSend << endl;
 
     if( tOrS == 'S' ) 
     {
+        cout << "Sleeping" << nTime <<  endl;
+        commandIsSleep = true;
         Sleep( nTime );
+        // cout << "after sleep" << endl;
     } else if( tOrS == 'T' ) {
         // send the T<N> command
+        commandIsSleep = false;
         snprintf( sendBuff, sizeof( sendBuff ), "%s", numToSend );
         write( sockfd, sendBuff, strlen( sendBuff ) );
     }
@@ -150,6 +154,9 @@ void clientLoop( string line )
     */
 //    cout << "Client before read" << endl;
 
+    if( commandIsSleep == false )
+    {
+        // IF IT"S A SLEEP IT GETS STUCK HERE
         if( ( n = read( sockfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
         {
             // cout << n << endl;
@@ -175,7 +182,7 @@ void clientLoop( string line )
         {
             printf("\n Read error \n");
         } 
-   
+    }
 }
 
 
@@ -204,10 +211,11 @@ int main(int argc, char *argv[])
     // }
 
 
+    // i should def put a input check
     string line;
     while ( cin >> line )
     {
-        cout << line << endl;
+        // cout << line << endl;
         clientLoop( line );
     }
 
@@ -217,8 +225,8 @@ int main(int argc, char *argv[])
     // if it breaks out of this loop ctr+D was pressed, can
     // send a terminating character to the buffer to signal
     // client is done
-    snprintf( sendBuff, sizeof( sendBuff ), "done" );
-    write( sockfd, sendBuff, strlen( sendBuff ) );
+    // snprintf( sendBuff, sizeof( sendBuff ), "done" );
+    // write( sockfd, sendBuff, strlen( sendBuff ) );
 
     return 0;
 
