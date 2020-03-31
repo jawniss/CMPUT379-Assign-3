@@ -25,12 +25,13 @@ using namespace std;
 void Trans( int n );    // Forward declarations of the provided functions without using header file
 void Sleep( int n );
 
-int    len, rc, on = 1, timeout, transactionsDone = 0;
+int    socketData, on = 1, timeout, transactionsDone = 0;
 int    listen_sd = -1, new_sd = -1;
 int    desc_ready, end_server = false, compress_array = false;
 int    close_conn;
 char   buffer[1025];
 char   sendBuff[1025];
+char hostnameBuff[1025];
 struct sockaddr_in   addr;
 struct pollfd fds[200];
 int    nfds = 1, current_size = 0, i, j;
@@ -45,7 +46,7 @@ void printEpochTime()
     gettimeofday(&tv,NULL);
     unsigned long long seconds = tv.tv_sec;
     unsigned long long millisecs = tv.tv_usec / 10000;
-    cout << seconds << "." << millisecs;
+    cout << seconds << "." << setfill('0') << millisecs << ": ";
 }
 
 
@@ -66,6 +67,8 @@ void setup( int argc, char *argv[] )
     } else {
         cout << "Port number selected: " << portNum << endl;
     }
+
+    cout << "Using port " << portNum << endl;
     
     /*************************************************************/
     /* Create an AF_INET6 stream socket to receive incoming      */
@@ -81,9 +84,9 @@ void setup( int argc, char *argv[] )
     /*************************************************************/
     /* Allow socket descriptor to be reuseable                   */
     /*************************************************************/
-    rc = setsockopt(listen_sd, SOL_SOCKET,  SO_REUSEADDR,
+    socketData = setsockopt(listen_sd, SOL_SOCKET,  SO_REUSEADDR,
                     (char *)&on, sizeof(on));
-    if (rc < 0)
+    if (socketData < 0)
     {
         perror("setsockopt() failed");
         close(listen_sd);
@@ -95,8 +98,8 @@ void setup( int argc, char *argv[] )
     /* the incoming connections will also be nonblocking since   */
     /* they will inherit that state from the listening socket.   */
     /*************************************************************/
-    rc = ioctl(listen_sd, FIONBIO, (char *)&on);
-    if (rc < 0)
+    socketData = ioctl(listen_sd, FIONBIO, (char *)&on);
+    if (socketData < 0)
     {
         perror("ioctl() failed");
         close(listen_sd);
@@ -109,11 +112,12 @@ void setup( int argc, char *argv[] )
     memset(&addr, 0, sizeof(addr));
     memset( sendBuff, '0', sizeof( sendBuff ) );
     memset( buffer, '0', sizeof( buffer ) );
+    memset( hostnameBuff, '0', sizeof( hostnameBuff ) );
     addr.sin_family      = AF_INET;
     // memcpy(&addr.sin_addr, &in6addr_any, sizeof(in6addr_any));
     addr.sin_port        = htons( portNum );
-    rc = ::bind(listen_sd, (struct sockaddr *)&addr, sizeof(addr));
-    if (rc < 0)
+    socketData = ::bind(listen_sd, (struct sockaddr *)&addr, sizeof(addr));
+    if (socketData < 0)
     {
         perror("bind() failed");
         close(listen_sd);
@@ -123,8 +127,8 @@ void setup( int argc, char *argv[] )
     /*************************************************************/
     /* Set the listen back log                                   */
     /*************************************************************/
-    rc = listen(listen_sd, 32);
-    if (rc < 0)
+    socketData = listen(listen_sd, 32);
+    if (socketData < 0)
     {
         perror("listen() failed");
         close(listen_sd);
@@ -162,12 +166,12 @@ void serverLoop()
         /* Call poll() and wait 60 seconds for it to complete.      */
         /***********************************************************/
         printf("Waiting on poll()...\n");
-        rc = poll(fds, nfds, timeout);
+        socketData = poll(fds, nfds, timeout);
 
         /***********************************************************/
         /* Check to see if the poll call failed.                   */
         /***********************************************************/
-        if (rc < 0)
+        if (socketData < 0)
         {
         perror("  poll() failed");
         break;
@@ -176,7 +180,7 @@ void serverLoop()
         /***********************************************************/
         /* Check to see if the 60 second time out expired.          */
         /***********************************************************/
-        if (rc == 0)
+        if (socketData == 0)
         {
         printf("  poll() timed out.  End program.\n");
         break;
@@ -271,9 +275,10 @@ void serverLoop()
                     /* failure occurs, we will close the                 */
                     /* connection.                                       */
                     /*****************************************************/
-                    rc = read( fds[i].fd, buffer, sizeof( buffer ) );
-                    buffer[rc] = 0;
-                    if (rc < 0)
+                    // socketData = read( fds[i].fd, hostnameBuff, sizeof( hostnameBuff ) );
+                    socketData = read( fds[i].fd, buffer, sizeof( buffer ) );                    
+                    buffer[socketData] = 0;
+                    if (socketData < 0)
                     {
                         if (errno != EWOULDBLOCK)
                         {
@@ -290,7 +295,7 @@ void serverLoop()
                     /* Check to see if the connection has been           */
                     /* closed by the client                              */
                     /*****************************************************/
-                    if ( rc == 0 )
+                    if ( socketData == 0 )
                     {
                         printf( "  Connection closed\n" );
                         close_conn = true;
@@ -300,9 +305,16 @@ void serverLoop()
                     /*****************************************************/
                     /* Data was received                                 */
                     /*****************************************************/
-                    len = rc;
-                    printf("  %d bytes received\n", len);
+                    printf("  %d bytes received\n", socketData);
                     totalTrans++;
+                    
+                    // cout << "Host: ";
+                    // if( fputs(hostnameBuff, stdout) == EOF )
+                    // {
+                    //     printf("\n Error : Fputs error\n");
+                    // }
+                    // cout << endl;
+
                     cout << "Buffer contents: ";
                     if( fputs(buffer, stdout) == EOF )
                     {
@@ -339,9 +351,8 @@ void serverLoop()
 
                     // trans function
                     string totalTransString = to_string( totalTrans );
-                    string tempString = "D" + totalTransString;
-                    const char* stringToSend = tempString.c_str();
-                    snprintf( sendBuff, sizeof( sendBuff ), stringToSend );
+                    const char* stringToSend = totalTransString.c_str();
+                    snprintf( sendBuff, sizeof( sendBuff ), "%s", stringToSend );
                     // snprintf( sendBuff, sizeof( sendBuff ), "%s", numToSend );
                     // write( listen_sd, sendBuff, strlen( sendBuff ) );
 
@@ -351,9 +362,9 @@ void serverLoop()
                     /*****************************************************/
                     /* Echo the data back to the client                  */
                     /*****************************************************/
-                    // rc = send(fds[i].fd, buffer, len, 0);
-                    rc = send(fds[i].fd, sendBuff, 7, 0);
-                    if (rc < 0)
+                    // socketData = send(fds[i].fd, buffer, len, 0);
+                    socketData = send(fds[i].fd, sendBuff, 7, 0);
+                    if (socketData < 0)
                     {
                         perror("  send() failed");
                         close_conn = true;

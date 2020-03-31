@@ -1,0 +1,11 @@
+Using port 6000
+Using server address 127.0.0.1
+Host Johnass-MacBook-Pro.local.10355
+1585695464.29: Send (T012)
+1585695464.30: Recv (D001)
+Sleep 1 units
+1585695467.34: Send (T031)
+1585695467.37: Recv (D002)
+1585695469.53: Send (T033)
+1585695469.57: Recv (D003)
+Sleep 12 units

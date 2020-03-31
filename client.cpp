@@ -44,8 +44,12 @@ void Sleep( int n );
 
 int sockfd, n, portNum, ipAddressInt;
 bool commandIsSleep = false;
+char hostnameBuff[1025];
 char recvBuff[1024];
 char sendBuff[1025];
+
+string hostname;
+const char* hostnameToSend;
 
 struct sockaddr_in serv_addr;
 char* ipAddressConstChar;
@@ -66,16 +70,24 @@ string logFileToWriteTo()
 }
 
 
-void printStartingInfoToLogFile()
+string getHostName()
 {
     char hostname[HOST_NAME_MAX];
-    gethostname(hostname, HOST_NAME_MAX);       // should get naem of computer
-    string hostPID = to_string( getpid() );
+    gethostname(hostname, HOST_NAME_MAX);
     string hostnameStringFormat( hostname );
+
+    return hostnameStringFormat;
+}
+
+
+void printStartingInfoToLogFile()
+{
+    string hostPID = to_string( getpid() );
+    string hostname = getHostName();
 
     cout << "Using port " << portNum << endl;
     cout << "Using server address " << ipAddressConstChar << endl;;
-    cout << "Host " << hostnameStringFormat << "." << hostPID << endl;
+    cout << "Host " << hostname << "." << hostPID << endl;
 }
 
 
@@ -106,7 +118,12 @@ void setup( int argc, char *argv[] )
     ipAddressInt = stoi( argv[2] );
     ipAddressConstChar = argv[2];
 
+    hostname = getHostName();
+    hostnameToSend = hostname.c_str();
+
     memset( recvBuff, '0', sizeof( recvBuff ) );
+    memset( sendBuff, '0', sizeof( sendBuff ) );
+    memset( hostnameBuff, '0', sizeof( hostnameBuff ) );
 
     // server can make any socket it wants, but the client
     // has to check if the made socket is the smae as the
@@ -152,20 +169,23 @@ void setup( int argc, char *argv[] )
 
 void printEpochTime()
 {
+    cout << setfill('0');
+
     struct timeval tv;
 
     // epoch time in ms
     gettimeofday(&tv,NULL);
     unsigned long long seconds = tv.tv_sec;
     unsigned long long millisecs = tv.tv_usec / 10000;
-    cout << seconds << "." << millisecs << ": ";
+
+    cout << seconds << "."<< millisecs << ": ";
+    cout << setfill(' ');
 }
 
 
 void splitInput( string inputCommand )
 {
     // only supposed to be T50 or S100 inputs
-    int inputSize = inputCommand.length(); 
   
     char tOrS = inputCommand.at(0);
     string commandNum = inputCommand.erase( 0, 1 );
@@ -182,6 +202,10 @@ void splitInput( string inputCommand )
         commandIsSleep = false;
         printEpochTime();
         cout << "Send (" << tOrS << setw(3) << nTime << ")" << endl; 
+        // send the hostname first
+        // snprintf( hostnameBuff, sizeof( hostnameBuff ), "%s", hostnameToSend );
+        // write( sockfd, hostnameBuff, strlen( hostnameBuff ) );
+
         snprintf( sendBuff, sizeof( sendBuff ), "%s", numToSend );
         write( sockfd, sendBuff, strlen( sendBuff ) );
     }
@@ -203,14 +227,11 @@ void clientLoop( string line )
     anything
     */
 
-    // cout << "Client before read" << endl;
 
     if( commandIsSleep == false )
     {
-        // IF IT"S A SLEEP IT GETS STUCK HERE
         if( ( n = read( sockfd, recvBuff, sizeof( recvBuff ) - 1 ) ) > 0 )
         {
-            // cout << n << endl;
             // this sets the end of whatever was read into the buffer to zero
             /*
             if buffer reads in a, b and c, n = 3.
@@ -225,9 +246,10 @@ void clientLoop( string line )
             // {
             //     printf("\n Error : Fputs error\n");
             // }
-            cout << "REC BUFF: " << recvBuff << endl;
+            printEpochTime();
+            cout << "Recv (D" << setw(3) << recvBuff << ")" << endl;
+            // cout << "REC BUFF: " << recvBuff << endl;
         } 
-        // cout << "After read" << endl;
 
         if( n < 0 )
         {
@@ -241,18 +263,22 @@ Clients have to send outputs to log file, server doesn't have to
 */
 int main(int argc, char *argv[])
 {
-    // logFileToWriteTo();
-
     std::ofstream out( logFileToWriteTo() );
     std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
     std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
-    // const char* tempFileName = logFileToWriteTo().c_str();
-    // freopen( tempFileName, "w", stdout);    // redirect stdout too for fputs
 
     setup( argc, argv );
     printStartingInfoToLogFile();
 
+    /*
+        When everything is set up, i should then send the host name
+        once here at the start, then have server read once after a
+        connection has been made, then store the hostname
+        into a vector
+    */
+
     // i should def put a input check
+    // could do the split, then check if T or S followed by num
     string line;
     while ( cin >> line )
     {
