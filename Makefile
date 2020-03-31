@@ -29,4 +29,4 @@ client: client.cpp tands.c
 
 clean:
 	# @rm -rf server client server.o client.o tands.o
-	@rm -rf server client *.o
+	@rm -rf server client *.o *.log

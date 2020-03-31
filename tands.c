@@ -15,7 +15,7 @@
 int TransSave = 0;
 
 void Trans( int n ) {
-	printf("Trans");
+	// printf("Trans");
 	long i, j;
 
 	// Use CPU cycles 
@@ -35,7 +35,7 @@ void Trans( int n ) {
 #include <time.h>
 
 void Sleep( int n ) {
-	printf("Sleep");
+	// printf("Sleep");
 	struct timespec sleep;
 
 	// Make sure pass a valid nanosecond time to nanosleep

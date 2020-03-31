@@ -1,4 +1,8 @@
-// From: www.thegeekstuff.com/2011/12/c-socket-programming
+/* From: www.thegeekstuff.com/2011/12/c-socket-programming
+    https://stackoverflow.com/questions/10150468/how-to-redirect-cin-and-cout-to-files
+        Nawaz file redirection
+*/
+
 
 /*
 okay on bottomright it say s"Col", don't let this go past 80 chars iguess
@@ -20,8 +24,13 @@ So we do the same thing as assign 2, continuous input
 #include <arpa/inet.h> 
 #include <iostream>
 #include <string>
+#include <limits.h>
+
+#include <fstream>
 
 using namespace std;
+
+#define HOST_NAME_MAX 50        // don't need this, linux has
 
 void Trans( int n );    // Forward declarations of the provided functions without using header file
 void Sleep( int n );
@@ -37,6 +46,34 @@ char sendBuff[1025];
 
 struct sockaddr_in serv_addr;
 char* ipAddressConstChar;
+
+
+string logFileToWriteTo()
+{
+    char hostname[HOST_NAME_MAX];
+    gethostname(hostname, HOST_NAME_MAX);       // should get naem of computer
+    string hostPID = to_string( getpid() );
+    string hostnameStringFormat( hostname );
+
+    // cout << "Computer: " << hostnameStringFormat << endl;
+    // cout << "PID: " << hostPID << endl;
+
+    string logFileName = hostnameStringFormat + "." + hostPID + ".log";
+    return logFileName;
+}
+
+
+void printStartingInfoToLogFile()
+{
+    char hostname[HOST_NAME_MAX];
+    gethostname(hostname, HOST_NAME_MAX);       // should get naem of computer
+    string hostPID = to_string( getpid() );
+    string hostnameStringFormat( hostname );
+
+    cout << "Using port " << portNum << endl;
+    cout << "Using server address " << ipAddressConstChar << endl;;
+    cout << "Host " << hostnameStringFormat << "." << hostPID << endl;
+}
 
 
 void setup( int argc, char *argv[] )
@@ -130,6 +167,16 @@ void splitInput( string inputCommand )
     } else if( tOrS == 'T' ) {
         // send the T<N> command
         commandIsSleep = false;
+
+        time_t result = time(nullptr);
+        // float result = std::time(nullptr);
+        std::cout << result << " seconds since the Epoch\n";
+
+        // cout << "Printf: ";
+        // printf("%02l", result);
+        // printf("%.2f", result);
+        // cout << endl;
+
         snprintf( sendBuff, sizeof( sendBuff ), "%s", numToSend );
         write( sockfd, sendBuff, strlen( sendBuff ) );
     }
@@ -152,7 +199,8 @@ void clientLoop( string line )
     n = the nunber of bytes read, and if it's 0 or less it doens' tdo 
     anything
     */
-//    cout << "Client before read" << endl;
+
+    // cout << "Client before read" << endl;
 
     if( commandIsSleep == false )
     {
@@ -170,11 +218,11 @@ void clientLoop( string line )
             recvBuff[n] = 0;
             cout << "Gotten from socket: ";
             // prints everything inside the bufffer
-            if( fputs(recvBuff, stdout) == EOF )
-            {
-                printf("\n Error : Fputs error\n");
-            }
-            cout << endl;
+            // if( fputs(recvBuff, stdout) == EOF )
+            // {
+            //     printf("\n Error : Fputs error\n");
+            // }
+            cout << "REC BUFF: " << recvBuff << endl;
         } 
         // cout << "After read" << endl;
 
@@ -185,31 +233,21 @@ void clientLoop( string line )
     }
 }
 
-
+/*
+Clients have to send outputs to log file, server doesn't have to
+*/
 int main(int argc, char *argv[])
 {
+    // logFileToWriteTo();
+
+    std::ofstream out( logFileToWriteTo() );
+    std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
+    std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+    // const char* tempFileName = logFileToWriteTo().c_str();
+    // freopen( tempFileName, "w", stdout);    // redirect stdout too for fputs
 
     setup( argc, argv );
-
-    // this works iwth ./client 500 127.0.0.1 <input.txt
-    // file redirection
-    // string line;
-    // while ( getline( cin, line ) )
-    // {
-    //     cout << line << endl;
-    //     clientLoop( line );
-    // }
-
-    // string line;
-    // vector< string > commands;
-    // while( getline( cin, line, ' ' ) )
-    // {
-    //     commands.push_back(line);
-    //     clientLoop( commands[0] );
-    //     cout << "Command: " << commands[0] << endl;
-    //     commands.erase( commands.begin() );
-    // }
-
+    printStartingInfoToLogFile();
 
     // i should def put a input check
     string line;
@@ -219,14 +257,8 @@ int main(int argc, char *argv[])
         clientLoop( line );
     }
 
-
-
-
-    // if it breaks out of this loop ctr+D was pressed, can
-    // send a terminating character to the buffer to signal
-    // client is done
-    // snprintf( sendBuff, sizeof( sendBuff ), "done" );
-    // write( sockfd, sendBuff, strlen( sendBuff ) );
+    std::cout.rdbuf(coutbuf); //reset to standard output again
+    // freclose( tempFileName, "w", stdout);
 
     return 0;
 

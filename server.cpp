@@ -25,7 +25,7 @@ void Sleep( int n );
 #define TRUE             1
 #define FALSE            0
 
-int    len, rc, on = 1, timeout;
+int    len, rc, on = 1, timeout, transactionsDone = 0;
 int    listen_sd = -1, new_sd = -1;
 int    desc_ready, end_server = FALSE, compress_array = FALSE;
 int    close_conn;
@@ -277,9 +277,9 @@ void serverLoop()
                     /* Check to see if the connection has been           */
                     /* closed by the client                              */
                     /*****************************************************/
-                    if (rc == 0)
+                    if ( rc == 0 )
                     {
-                        printf("  Connection closed\n");
+                        printf( "  Connection closed\n" );
                         close_conn = TRUE;
                         break;
                     }
@@ -320,7 +320,8 @@ void serverLoop()
                         do the trans(n )
 
                     */
-
+                    // at his point the server should send to the socket that the trans
+                    //action is done, need the global counter for transactions done
 
                     // trans function
 
