@@ -26,6 +26,7 @@ So we do the same thing as assign 2, continuous input
 #include <string>
 #include <limits.h>
 #include <sys/time.h>
+#include <iomanip>
 
 
 #include <fstream>
@@ -174,26 +175,13 @@ void splitInput( string inputCommand )
 
     if( tOrS == 'S' ) 
     {
-        cout << "Sleeping" << nTime <<  endl;
         commandIsSleep = true;
-        cout << "Sleep " << nTime << " units";
+        cout << "Sleep " << nTime << " units" << endl;;
         Sleep( nTime );
-        // cout << "after sleep" << endl;
     } else if( tOrS == 'T' ) {
-        // send the T<N> command
         commandIsSleep = false;
-
-        time_t result = time(nullptr);
-        // float result = std::time(nullptr);
         printEpochTime();
-        // std::cout << " seconds since the Epoch\n";
         cout << "Send (" << tOrS << setw(3) << nTime << ")" << endl; 
-
-        // cout << "Printf: ";
-        // printf("%02l", result);
-        // printf("%.2f", result);
-        // cout << endl;
-
         snprintf( sendBuff, sizeof( sendBuff ), "%s", numToSend );
         write( sockfd, sendBuff, strlen( sendBuff ) );
     }
@@ -203,8 +191,6 @@ void splitInput( string inputCommand )
 void clientLoop( string line ) 
 {
     splitInput( line );
-
-
     /*
     if it doesn't read from the socket properly
     read does not output, returns an int of number of bytes readf
