@@ -25,6 +25,8 @@ So we do the same thing as assign 2, continuous input
 #include <iostream>
 #include <string>
 #include <limits.h>
+#include <sys/time.h>
+
 
 #include <fstream>
 
@@ -147,6 +149,18 @@ void setup( int argc, char *argv[] )
 }
 
 
+void printEpochTime()
+{
+    struct timeval tv;
+
+    // epoch time in ms
+    gettimeofday(&tv,NULL);
+    unsigned long long seconds = tv.tv_sec;
+    unsigned long long millisecs = tv.tv_usec / 10000;
+    cout << seconds << "." << millisecs;
+}
+
+
 void splitInput( string inputCommand )
 {
     // only supposed to be T50 or S100 inputs
@@ -170,7 +184,8 @@ void splitInput( string inputCommand )
 
         time_t result = time(nullptr);
         // float result = std::time(nullptr);
-        std::cout << result << " seconds since the Epoch\n";
+        printEpochTime();
+        std::cout << " seconds since the Epoch\n";
 
         // cout << "Printf: ";
         // printf("%02l", result);
@@ -216,7 +231,7 @@ void clientLoop( string line )
             sets end of string
             */
             recvBuff[n] = 0;
-            cout << "Gotten from socket: ";
+            // cout << "Gotten from socket: ";
             // prints everything inside the bufffer
             // if( fputs(recvBuff, stdout) == EOF )
             // {

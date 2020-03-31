@@ -16,24 +16,35 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_71/rzab6/poll.htm
 #include <sys/ioctl.h>
 #include <time.h> 
 #include <iostream>
+#include <sys/time.h>
+
 
 using namespace std;
 
 void Trans( int n );    // Forward declarations of the provided functions without using header file
 void Sleep( int n );
 
-#define TRUE             1
-#define FALSE            0
-
 int    len, rc, on = 1, timeout, transactionsDone = 0;
 int    listen_sd = -1, new_sd = -1;
-int    desc_ready, end_server = FALSE, compress_array = FALSE;
+int    desc_ready, end_server = false, compress_array = false;
 int    close_conn;
 char   buffer[1025];
 char   sendBuff[1025];
 struct sockaddr_in   addr;
 struct pollfd fds[200];
 int    nfds = 1, current_size = 0, i, j;
+
+
+void printEpochTime()
+{
+    struct timeval tv;
+
+    // epoch time in ms
+    gettimeofday(&tv,NULL);
+    unsigned long long seconds = tv.tv_sec;
+    unsigned long long millisecs = tv.tv_usec / 10000;
+    cout << seconds << "." << millisecs;
+}
 
 
 void setup( int argc, char *argv[] )
@@ -213,7 +224,7 @@ void serverLoop()
                         if (errno != EWOULDBLOCK)
                         {
                             perror("  accept() failed");
-                            end_server = TRUE;
+                            end_server = true;
                         }
                         break;
                     }
@@ -244,7 +255,7 @@ void serverLoop()
                 // This happens evertime new data is sent by the client
                 // printf("  Descriptor %d is readable\n", fds[i].fd );
                 printf("  Client %d is readable\n", i );
-                close_conn = FALSE;
+                close_conn = false;
                 /*******************************************************/
                 /* Receive all incoming data on this socket            */
                 /* before we loop back and call poll again.            */
@@ -267,7 +278,7 @@ void serverLoop()
                             // this is wheer "connection reset by peer" 
                             // is written cus it's perror
                             perror("  recv() failed");
-                            close_conn = TRUE;
+                            close_conn = true;
 
                         }
                         break;
@@ -280,7 +291,7 @@ void serverLoop()
                     if ( rc == 0 )
                     {
                         printf( "  Connection closed\n" );
-                        close_conn = TRUE;
+                        close_conn = true;
                         break;
                     }
 
@@ -340,11 +351,11 @@ void serverLoop()
                     if (rc < 0)
                     {
                         perror("  send() failed");
-                        close_conn = TRUE;
+                        close_conn = true;
                         break;
                     }
 
-                } while(TRUE);
+                } while(true);
 
                 /*******************************************************/
                 /* If the close_conn flag was turned on, we need       */
@@ -356,7 +367,7 @@ void serverLoop()
                 {
                     close(fds[i].fd);
                     fds[i].fd = -1;
-                    compress_array = TRUE;
+                    compress_array = true;
                 }
 
 
@@ -372,7 +383,7 @@ void serverLoop()
         /***********************************************************/
         if (compress_array)
         {
-            compress_array = FALSE;
+            compress_array = false;
             for (i = 0; i < nfds; i++)
             {
                 if (fds[i].fd == -1)
@@ -386,7 +397,7 @@ void serverLoop()
                 }
             }
         }
-    } while (end_server == FALSE); /* End of serving running.    */
+    } while (end_server == false); /* End of serving running.    */
 }
 
 
