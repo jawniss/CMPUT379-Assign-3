@@ -157,7 +157,7 @@ void printEpochTime()
     gettimeofday(&tv,NULL);
     unsigned long long seconds = tv.tv_sec;
     unsigned long long millisecs = tv.tv_usec / 10000;
-    cout << seconds << "." << millisecs;
+    cout << seconds << "." << millisecs << ": ";
 }
 
 
@@ -176,6 +176,7 @@ void splitInput( string inputCommand )
     {
         cout << "Sleeping" << nTime <<  endl;
         commandIsSleep = true;
+        cout << "Sleep " << nTime << " units";
         Sleep( nTime );
         // cout << "after sleep" << endl;
     } else if( tOrS == 'T' ) {
@@ -185,7 +186,8 @@ void splitInput( string inputCommand )
         time_t result = time(nullptr);
         // float result = std::time(nullptr);
         printEpochTime();
-        std::cout << " seconds since the Epoch\n";
+        // std::cout << " seconds since the Epoch\n";
+        cout << "Send (" << tOrS << setw(3) << nTime << ")" << endl; 
 
         // cout << "Printf: ";
         // printf("%02l", result);
@@ -275,6 +277,8 @@ int main(int argc, char *argv[])
     std::cout.rdbuf(coutbuf); //reset to standard output again
     // freclose( tempFileName, "w", stdout);
 
+    // at the end here just send the entire "15 transactions sent by ug.10301
+    //into the buffer"
     return 0;
 
 }

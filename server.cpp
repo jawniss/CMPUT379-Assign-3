@@ -33,6 +33,7 @@ char   sendBuff[1025];
 struct sockaddr_in   addr;
 struct pollfd fds[200];
 int    nfds = 1, current_size = 0, i, j;
+int    totalTrans = 0;
 
 
 void printEpochTime()
@@ -271,6 +272,7 @@ void serverLoop()
                     /*****************************************************/
                     rc = read( fds[i].fd, buffer, sizeof( buffer ) );
                     buffer[rc] = 0;
+                    totalTrans++;
                     if (rc < 0)
                     {
                         if (errno != EWOULDBLOCK)
@@ -322,6 +324,7 @@ void serverLoop()
                     // cout << "Stringint: " << stringInt << endl;
 
                     int nTime = std::stoi( stringInt );
+                    cout << "nTime recieved: " << nTime << endl;
 
                     Trans( nTime );
 
@@ -414,6 +417,7 @@ void cleanUp()
 }
 
 
+// at the end for the summary just send the entire string
 int main (int argc, char *argv[])
 {
     setup( argc, argv );
