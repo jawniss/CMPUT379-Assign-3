@@ -272,7 +272,6 @@ void serverLoop()
                     /*****************************************************/
                     rc = read( fds[i].fd, buffer, sizeof( buffer ) );
                     buffer[rc] = 0;
-                    totalTrans++;
                     if (rc < 0)
                     {
                         if (errno != EWOULDBLOCK)
@@ -302,7 +301,7 @@ void serverLoop()
                     /*****************************************************/
                     len = rc;
                     printf("  %d bytes received\n", len);
-                    
+                    totalTrans++;
                     cout << "Buffer contents: ";
                     if( fputs(buffer, stdout) == EOF )
                     {
@@ -324,7 +323,7 @@ void serverLoop()
                     // cout << "Stringint: " << stringInt << endl;
 
                     int nTime = std::stoi( stringInt );
-                    cout << "nTime recieved: " << nTime << endl;
+                    // cout << "nTime recieved: " << nTime << endl;
 
                     Trans( nTime );
 
@@ -338,8 +337,10 @@ void serverLoop()
                     //action is done, need the global counter for transactions done
 
                     // trans function
-
-                    snprintf( sendBuff, sizeof( sendBuff ), "got it" );
+                    string totalTransString = to_string( totalTrans );
+                    string tempString = "D" + totalTransString;
+                    const char* stringToSend = tempString.c_str();
+                    snprintf( sendBuff, sizeof( sendBuff ), stringToSend );
                     // snprintf( sendBuff, sizeof( sendBuff ), "%s", numToSend );
                     // write( listen_sd, sendBuff, strlen( sendBuff ) );
 
