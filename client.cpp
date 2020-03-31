@@ -178,7 +178,7 @@ void printEpochTime()
     unsigned long long seconds = tv.tv_sec;
     unsigned long long millisecs = tv.tv_usec / 10000;
 
-    cout << seconds << "."<< millisecs << ": ";
+    cout << seconds << "." << setw(2) << millisecs << ": ";
     cout << setfill(' ');
 }
 
