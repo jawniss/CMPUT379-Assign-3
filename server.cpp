@@ -40,13 +40,18 @@ int    totalTrans = 0;
 
 void printEpochTime()
 {
+    cout << setfill('0');   // put it here cus if i put it on same cout 
+    // as seconds << "." << setw(2) it doesn't work - i set it early here
+
     struct timeval tv;
 
     // epoch time in ms
     gettimeofday(&tv,NULL);
     unsigned long long seconds = tv.tv_sec;
     unsigned long long millisecs = tv.tv_usec / 10000;
-    cout << seconds << "." << setfill('0') << millisecs << ": ";
+
+    cout << seconds << "." << setw(2) << millisecs << ": ";
+    cout << setfill(' ');
 }
 
 
@@ -65,10 +70,8 @@ void setup( int argc, char *argv[] )
         cout << "Port number must be between 5000 and 64,000" << endl;
         exit( EXIT_FAILURE );
     } else {
-        cout << "Port number selected: " << portNum << endl;
+        cout << "Using port " << portNum << endl;
     }
-
-    cout << "Using port " << portNum << endl;
     
     /*************************************************************/
     /* Create an AF_INET6 stream socket to receive incoming      */
@@ -165,7 +168,7 @@ void serverLoop()
         /***********************************************************/
         /* Call poll() and wait 60 seconds for it to complete.      */
         /***********************************************************/
-        printf("Waiting on poll()...\n");
+        // printf("Waiting on poll()...\n");
         socketData = poll(fds, nfds, timeout);
 
         /***********************************************************/
@@ -208,7 +211,7 @@ void serverLoop()
                 /* Listening descriptor is readable.                   */
                 /*******************************************************/
                 // This is printed everytime a new client is connected
-                printf("  Listening socket is readable\n");
+                // printf("  Listening socket is readable\n");
 
                 /*******************************************************/
                 /* Accept all incoming connections that are            */
@@ -239,7 +242,7 @@ void serverLoop()
                     /* Add the new incoming connection to the            */
                     /* pollfd structure                                  */
                     /*****************************************************/
-                    printf("  New incoming connection - %d\n", new_sd);
+                    // printf("  New incoming connection - %d\n", new_sd);
                     fds[nfds].fd = new_sd;
                     fds[nfds].events = POLLIN;
                     nfds++;
@@ -260,7 +263,7 @@ void serverLoop()
             {
                 // This happens evertime new data is sent by the client
                 // printf("  Descriptor %d is readable\n", fds[i].fd );
-                printf("  Client %d is readable\n", i );
+                // printf("  Client %d is readable\n", i );
                 close_conn = false;
                 /*******************************************************/
                 /* Receive all incoming data on this socket            */
@@ -305,9 +308,12 @@ void serverLoop()
                     /*****************************************************/
                     /* Data was received                                 */
                     /*****************************************************/
-                    printf("  %d bytes received\n", socketData);
+                    // printf("  %d bytes received\n", socketData);
                     totalTrans++;
-                    
+
+                    printEpochTime();
+                    cout << "#" << setw(3) << totalTrans << " (T" << setw(3) << buffer << ")" << endl;
+
                     // cout << "Host: ";
                     // if( fputs(hostnameBuff, stdout) == EOF )
                     // {
@@ -315,12 +321,12 @@ void serverLoop()
                     // }
                     // cout << endl;
 
-                    cout << "Buffer contents: ";
-                    if( fputs(buffer, stdout) == EOF )
-                    {
-                        printf("\n Error : Fputs error\n");
-                    }
-                    cout << endl;
+                    // cout << "Buffer contents: ";
+                    // if( fputs(buffer, stdout) == EOF )
+                    // {
+                    //     printf("\n Error : Fputs error\n");
+                    // }
+                    // cout << endl;
 
                     // put the read function here?
 
@@ -340,6 +346,9 @@ void serverLoop()
 
                     Trans( nTime );
 
+
+                    printEpochTime();
+                    cout << "#" << setw(3) << totalTrans << " (Done)" << endl;
                     /*
                         read the number from the socket
                             if number is EOF, close connection

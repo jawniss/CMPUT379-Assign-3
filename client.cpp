@@ -42,7 +42,7 @@ void Sleep( int n );
     Made these globals as to have a cleaner main function
 */
 
-int sockfd, n, portNum, ipAddressInt;
+int sockfd, n, portNum, ipAddressInt, totalTrans = 0;
 bool commandIsSleep = false;
 char hostnameBuff[1025];
 char recvBuff[1024];
@@ -169,7 +169,8 @@ void setup( int argc, char *argv[] )
 
 void printEpochTime()
 {
-    cout << setfill('0');
+    cout << setfill('0');   // put it here cus if i put it on same cout 
+    // as seconds << "." << setw(2) it doesn't work - i set it early here
 
     struct timeval tv;
 
@@ -208,6 +209,7 @@ void splitInput( string inputCommand )
 
         snprintf( sendBuff, sizeof( sendBuff ), "%s", numToSend );
         write( sockfd, sendBuff, strlen( sendBuff ) );
+        totalTrans++;
     }
 }
 
@@ -285,6 +287,8 @@ int main(int argc, char *argv[])
         // cout << line << endl;
         clientLoop( line );
     }
+
+    cout << "Sent " << totalTrans << " transactions" << endl;
 
     std::cout.rdbuf(coutbuf); //reset to standard output again
     // freclose( tempFileName, "w", stdout);
