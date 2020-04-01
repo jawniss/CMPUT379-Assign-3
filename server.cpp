@@ -452,7 +452,8 @@ int main (int argc, char *argv[])
     cleanUp();
 
     for (auto &e: clients) {
-		cout << "Client: " << e.first << ", " << e.second << endl;
+		// cout << "Client: " << e.first << ", " << e.second << endl;
+        cout << setw(4) << e.second << " transactions from " << e.first << endl;
 	}
 }
 
