@@ -49,7 +49,6 @@ char recvBuff[1024];
 char sendBuff[1025];
 
 string hostname;
-string hostPID;
 const char* hostnameToSend;
 
 struct sockaddr_in serv_addr;
@@ -83,8 +82,8 @@ string getHostName()
 
 void printStartingInfoToLogFile()
 {
-    hostPID = to_string( getpid() );
-    hostname = getHostName();
+    string hostPID = to_string( getpid() );
+    string hostname = getHostName();
 
     cout << "Using port " << portNum << endl;
     cout << "Using server address " << ipAddressConstChar << endl;;
@@ -192,7 +191,7 @@ void splitInput( string inputCommand )
     char tOrS = inputCommand.at(0);
     string commandNum = inputCommand.erase( 0, 1 );
     int nTime = std::stoi( commandNum );
-    // const char* numToSend = commandNum.c_str();
+    const char* numToSend = commandNum.c_str();
     // cout << nTime << " " << numToSend << endl;
 
     if( tOrS == 'S' ) 
@@ -207,10 +206,8 @@ void splitInput( string inputCommand )
         // send the hostname first
         // snprintf( hostnameBuff, sizeof( hostnameBuff ), "%s", hostnameToSend );
         // write( sockfd, hostnameBuff, strlen( hostnameBuff ) );
-        string stringToSend = commandNum + "," + getHostName() + "." + hostPID;
-        const char* stuffToSend = stringToSend.c_str();
 
-        snprintf( sendBuff, sizeof( sendBuff ), "%s", stuffToSend );
+        snprintf( sendBuff, sizeof( sendBuff ), "%s", numToSend );
         write( sockfd, sendBuff, strlen( sendBuff ) );
         totalTrans++;
     }

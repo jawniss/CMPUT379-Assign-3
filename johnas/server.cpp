@@ -18,8 +18,6 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_71/rzab6/poll.htm
 #include <iostream>
 #include <sys/time.h>
 #include <iomanip>
-#include <unordered_map>
-#include <iterator>
 
 
 using namespace std;
@@ -312,36 +310,38 @@ void serverLoop()
                     /*****************************************************/
                     // printf("  %d bytes received\n", socketData);
                     totalTrans++;
-                    string tempBuffer = string( buffer );
-                    cout << "Temp string buffer: " << tempBuffer << endl;
-                    string commandNumStringFormat = tempBuffer.substr( 0, tempBuffer.find(",") );
-                    string clientName = tempBuffer.substr( tempBuffer.find(",") + 1, tempBuffer.length() );
-                    cout << "Clientname: " << clientName << endl;
 
-
-                    // if (std::find(clients[0].begin(), clients[0].end(), clientName) != clients[0].end())
-                    // {
-                    //     // Element in vector.
-
-                    // }
-                    
-
-
-
-
-                    string commandNumInt( commandNumStringFormat );
                     printEpochTime();
-                    cout << "#" << setw(3) << totalTrans << " (T" << setw(3) << commandNumInt << ")" << endl;
+                    cout << "#" << setw(3) << totalTrans << " (T" << setw(3) << buffer << ")" << endl;
 
-                    
+                    // cout << "Host: ";
+                    // if( fputs(hostnameBuff, stdout) == EOF )
+                    // {
+                    //     printf("\n Error : Fputs error\n");
+                    // }
+                    // cout << endl;
+
+                    // cout << "Buffer contents: ";
+                    // if( fputs(buffer, stdout) == EOF )
+                    // {
+                    //     printf("\n Error : Fputs error\n");
+                    // }
+                    // cout << endl;
 
                     // put the read function here?
 
+
+
+                    // sscanf messes up the buffer meant for sending, so i copy it
+
+                    // int i;
+                    // sscanf(buffer, "%d", &i);
+                    // cout << "I: " << i << endl;
                     string stringInt( buffer );
                     // cout << "Buffer: " << buffer << endl;
                     // cout << "Stringint: " << stringInt << endl;
 
-                    int nTime = std::stoi( commandNumInt );
+                    int nTime = std::stoi( stringInt );
                     // cout << "nTime recieved: " << nTime << endl;
 
                     Trans( nTime );
