@@ -1,6 +1,10 @@
 /*------------------------------------------------------
-Adapted from 
-https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_71/rzab6/poll.htm
+    Adapted from 
+    https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_71/rzab6/poll.htm
+
+    Johnas Wong
+    CCID: johnas
+    ID: 1529241
 ------------------------------------------------------*/
 
 #include <sys/socket.h>
@@ -21,7 +25,6 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_71/rzab6/poll.htm
 #include <unordered_map>
 #include <iterator>
 #include <chrono>
-
 
 using namespace std;
 
@@ -44,11 +47,10 @@ auto   start_time = std::chrono::system_clock::now();
 chrono::duration<double> elapsed_time;
 
 
+// Print the epoch time
 void printEpochTime()
 {
-    cout << setfill('0');   // put it here cus if i put it on same cout 
-    // as seconds << "." << setw(2) it doesn't work - i set it early here
-
+    cout << setfill('0');
     struct timeval tv;
 
     // epoch time in ms
@@ -61,9 +63,10 @@ void printEpochTime()
 }
 
 
+// Set up the sockets and connections
 void setup( int argc, char *argv[] )
 {
-    if( argc != 2 )     // maybe later i should change these to ask again? possible?
+    if( argc != 2 )
     {
         cout << "Invalid input arguments" << endl;
         exit( EXIT_FAILURE );
@@ -89,6 +92,7 @@ void setup( int argc, char *argv[] )
         perror("socket() failed");
         exit(-1);
     }
+
 
     /*************************************************************/
     /* Allow socket descriptor to be reuseable                   */
@@ -122,7 +126,6 @@ void setup( int argc, char *argv[] )
     memset( sendBuff, '0', sizeof( sendBuff ) );
     memset( buffer, '0', sizeof( buffer ) );
     addr.sin_family      = AF_INET;
-    // memcpy(&addr.sin_addr, &in6addr_any, sizeof(in6addr_any));
     addr.sin_port        = htons( portNum );
     socketData = ::bind(listen_sd, (struct sockaddr *)&addr, sizeof(addr));
     if (socketData < 0)
@@ -156,12 +159,12 @@ void setup( int argc, char *argv[] )
     /*************************************************************/
     /* Initialize the timeout to 60 seconds. If no                */
     /* activity after 60 seconds this program will end.           */
-    /* timeout value is based on milliseconds.                   */
     /*************************************************************/
-    timeout = ( 6 * 1000 );
+    timeout = ( 60 * 1000 );
 }
 
 
+// Main loop of server, stays in here until inactivity timeout of 60 seconds passes with no connected clients
 void serverLoop()
 {
     /*************************************************************/
@@ -173,7 +176,6 @@ void serverLoop()
         /***********************************************************/
         /* Call poll() and wait 60 seconds for it to complete.      */
         /***********************************************************/
-        // printf("Waiting on poll()...\n");
         socketData = poll(fds, nfds, timeout);
 
         /***********************************************************/
@@ -190,7 +192,6 @@ void serverLoop()
         /***********************************************************/
         if (socketData == 0)
         {
-            // printf("  poll() timed out.  End program.\n");
             break;
         }
 
@@ -212,12 +213,6 @@ void serverLoop()
 
             if (fds[i].fd == listen_sd)
             {
-                /*******************************************************/
-                /* Listening descriptor is readable.                   */
-                /*******************************************************/
-                // This is printed everytime a new client is connected
-                // printf("  Listening socket is readable\n");
-
                 /*******************************************************/
                 /* Accept all incoming connections that are            */
                 /* queued up on the listening socket before we         */
@@ -247,7 +242,6 @@ void serverLoop()
                     /* Add the new incoming connection to the            */
                     /* pollfd structure                                  */
                     /*****************************************************/
-                    // printf("  New incoming connection - %d\n", new_sd);
                     fds[nfds].fd = new_sd;
                     fds[nfds].events = POLLIN;
                     nfds++;
@@ -266,15 +260,11 @@ void serverLoop()
 
             else
             {
-                // This happens evertime new data is sent by the client
-                // printf("  Descriptor %d is readable\n", fds[i].fd );
-                // printf("  Client %d is readable\n", i );
                 close_conn = false;
                 /*******************************************************/
                 /* Receive all incoming data on this socket            */
                 /* before we loop back and call poll again.            */
                 /*******************************************************/
-
                 do
                 {
                     /*****************************************************/
@@ -283,18 +273,13 @@ void serverLoop()
                     /* failure occurs, we will close the                 */
                     /* connection.                                       */
                     /*****************************************************/
-                    // socketData = read( fds[i].fd, hostnameBuff, sizeof( hostnameBuff ) );
                     socketData = read( fds[i].fd, buffer, sizeof( buffer ) );                    
                     buffer[socketData] = 0;
                     if (socketData < 0)
                     {
                         if (errno != EWOULDBLOCK)
                         {
-                            // this is wheer "connection reset by peer" 
-                            // is written cus it's perror
-                            // perror("  recv() failed");
                             close_conn = true;
-
                         }
                         break;
                     }
@@ -305,7 +290,6 @@ void serverLoop()
                     /*****************************************************/
                     if ( socketData == 0 )
                     {
-                        printf( "  Connection closed\n" );
                         close_conn = true;
                         break;
                     }
@@ -313,7 +297,6 @@ void serverLoop()
                     /*****************************************************/
                     /* Data was received                                 */
                     /*****************************************************/
-                    // printf("  %d bytes received\n", socketData);
                     if( timeStarted == false )
                     {
                         start_time = chrono::system_clock::now();
@@ -322,42 +305,28 @@ void serverLoop()
 
                     totalTrans++;
                     string tempBuffer = string( buffer );
-                    // cout << "Temp string buffer: " << tempBuffer << endl;
                     string commandNumStringFormat = tempBuffer.substr( 0, tempBuffer.find(",") );
                     string clientName = tempBuffer.substr( tempBuffer.find(",") + 1, tempBuffer.length() );
-                    // cout << "Clientname: " << clientName << endl;
 
 
                     unordered_map<string,int>::iterator it = clients.find( clientName );
                     // key already present in the map
                     if (it != clients.end()) {
-                        it->second++;	// increment map's value for key 'c'
-                    }
-                    // key not found
-                    else {
+                        it->second++;	// increment map's value for key clientName
+                    } else {        // key not found
                         clients.insert(std::make_pair(clientName, 1));
                     }
-
-
 
                     string commandNumInt( commandNumStringFormat );
                     printEpochTime();
                     cout << "#" << setw(3) << totalTrans << " (T" << setw(3) << 
                         commandNumInt << ") from " << clientName << endl;
 
-                    
-
-                    // put the read function here?
-
                     string stringInt( buffer );
-                    // cout << "Buffer: " << buffer << endl;
-                    // cout << "Stringint: " << stringInt << endl;
 
                     int nTime = std::stoi( commandNumInt );
-                    // cout << "nTime recieved: " << nTime << endl;
 
                     Trans( nTime );
-
 
                     printEpochTime();
                     cout << "#" << setw(3) << totalTrans << 
@@ -365,27 +334,13 @@ void serverLoop()
                     
                     elapsed_time = std::chrono::system_clock::now() 
                         - start_time;
-                    /*
-                        read the number from the socket
-                            if number is EOF, close connection
-                        do the trans(n )
 
-                    */
-                    // at his point the server should send to the socket that the trans
-                    //action is done, need the global counter for transactions done
-
-                    // trans function
                     string totalTransString = to_string( totalTrans );
                     const char* stringToSend = totalTransString.c_str();
                     snprintf( sendBuff, sizeof( sendBuff ), "%s", stringToSend );
-                    // snprintf( sendBuff, sizeof( sendBuff ), "%s", numToSend );
-                    // write( listen_sd, sendBuff, strlen( sendBuff ) );
 
-
-                    /*****************************************************/
-                    /* Echo the data back to the client                  */
-                    /*****************************************************/
-                    socketData = send(fds[i].fd, sendBuff, sizeof( sendBuff ), 0);
+                    // Send data to the client
+                    socketData = send(fds[i].fd, sendBuff, 10, 0);
                     if (socketData < 0)
                     {
                         perror("  send() failed");
@@ -409,8 +364,8 @@ void serverLoop()
                 }
 
 
-            }  /* End of existing connection is readable             */
-        } /* End of loop through pollable descriptors              */
+            }
+        }
 
         /***********************************************************/
         /* If the compress_array flag was turned on, we need       */
@@ -435,10 +390,11 @@ void serverLoop()
                 }
             }
         }
-    } while (end_server == false); /* End of serving running.    */
+    } while (end_server == false);
 }
 
 
+// Close all still-open connections
 void cleanUp()
 {
     /*************************************************************/
@@ -452,7 +408,6 @@ void cleanUp()
 }
 
 
-// at the end for the summary just send the entire string
 int main (int argc, char *argv[])
 {
     setup( argc, argv );
@@ -463,7 +418,6 @@ int main (int argc, char *argv[])
 
     cout << endl << "SUMMARY" << endl;
     for (auto &e: clients) {
-		// cout << "Client: " << e.first << ", " << e.second << endl;
         cout << setw(4) << e.second << " transactions from " << e.first << endl;
 	}
     double execution_time = elapsed_time.count();

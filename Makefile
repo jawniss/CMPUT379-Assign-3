@@ -1,15 +1,10 @@
 CFLAGS = -Wall -std=c++11
 
-all: server client
+all: server client serverMan clientMan
 server: server
 client: client
-
-# Linker:
-# server: server.o tands.o
-# 	g++ server.o tands.o -pthread $(CFLAGS) -o server
-
-# client: client.o tands.o
-# 	g++ client.o tands.o -pthread $(CFLAGS) -o client
+serverMan: serverMan
+clientMan: clientMan
 
 server: server.cpp tands.c
 	g++ server.cpp tands.c $(CFLAGS) -o server
@@ -17,16 +12,11 @@ server: server.cpp tands.c
 client: client.cpp tands.c 
 	g++ client.cpp tands.c $(CFLAGS) -o client
 
-# Compilation commands:
-# server.o: server.cpp
-# 	g++ -c server.cpp $(CFLAGS) -o server.o
+clientMan:
+	groff -man -Tpdf < client.1  > client.pdf
 
-# client.o: client.cpp
-# 	g++ -c client.cpp $(CFLAGS) -o client.o
-
-# tands.o: tands.c
-# 	g++ -c tands.c $(CFLAGS) -o tands.o
+serverMan:
+	groff -man -Tpdf < server.1  > server.pdf
 
 clean:
-	# @rm -rf server client server.o client.o tands.o
-	@rm -rf server client *.o *.log
+	@rm -rf server client *.o *.log *.pdf

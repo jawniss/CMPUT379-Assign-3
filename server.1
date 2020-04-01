@@ -1,0 +1,18 @@
+.\" Manpage for server.
+.\" Contact johnas@ualberta.ca to correct errors or typos.
+.TH server 1 "31 March 2020" "1.0" "server man page"
+.SH NAME
+server
+.SH SYNOPSIS
+server [PORT NUMBER]
+.SH ARGUMENTS
+server takes one argument:
+    Argument 1: port number (Within 5000 and 64000)
+.SH DESCRIPTION
+server is a program receiving and performing transaction tasks recieved from the client connected to it. It timeouts after 60 seconds of inactivity only if no clients are connected - if at least one client is connected, the server will wait indefinitely.
+.SH SEE ALSO
+client(1)
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Johnas Wong (CCID: johnas, ID: 1529241)
