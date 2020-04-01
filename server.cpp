@@ -38,6 +38,7 @@ struct sockaddr_in   addr;
 struct pollfd fds[200];
 int    nfds = 1, current_size = 0, i, j;
 int    totalTrans = 0;
+unordered_map<string, int> clients;
 
 
 void printEpochTime()
@@ -319,13 +320,15 @@ void serverLoop()
                     cout << "Clientname: " << clientName << endl;
 
 
-                    // if (std::find(clients[0].begin(), clients[0].end(), clientName) != clients[0].end())
-                    // {
-                    //     // Element in vector.
-
-                    // }
-                    
-
+                    unordered_map<string,int>::iterator it = clients.find( clientName );
+                    // key already present in the map
+                    if (it != clients.end()) {
+                        it->second++;	// increment map's value for key 'c'
+                    }
+                    // key not found
+                    else {
+                        clients.insert(std::make_pair(clientName, 1));
+                    }
 
 
 
@@ -447,5 +450,9 @@ int main (int argc, char *argv[])
     serverLoop();
 
     cleanUp();
+
+    for (auto &e: clients) {
+		cout << "Client: " << e.first << ", " << e.second << endl;
+	}
 }
 
