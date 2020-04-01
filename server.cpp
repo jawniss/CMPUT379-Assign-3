@@ -20,6 +20,7 @@ https://www.ibm.com/support/knowledgecenter/ssw_ibm_i_71/rzab6/poll.htm
 #include <iomanip>
 #include <unordered_map>
 #include <iterator>
+#include <chrono>
 
 
 using namespace std;
@@ -29,16 +30,18 @@ void Sleep( int n );
 
 int    socketData, on = 1, timeout, transactionsDone = 0;
 int    listen_sd = -1, new_sd = -1;
-int    desc_ready, end_server = false, compress_array = false;
+int    end_server = false, compress_array = false;
 int    close_conn;
 char   buffer[1025];
 char   sendBuff[1025];
-char hostnameBuff[1025];
 struct sockaddr_in   addr;
 struct pollfd fds[200];
 int    nfds = 1, current_size = 0, i, j;
 int    totalTrans = 0;
 unordered_map<string, int> clients;
+bool   timeStarted = false;
+auto   start_time = std::chrono::system_clock::now();
+chrono::duration<double> elapsed_time;
 
 
 void printEpochTime()
@@ -118,7 +121,6 @@ void setup( int argc, char *argv[] )
     memset(&addr, 0, sizeof(addr));
     memset( sendBuff, '0', sizeof( sendBuff ) );
     memset( buffer, '0', sizeof( buffer ) );
-    memset( hostnameBuff, '0', sizeof( hostnameBuff ) );
     addr.sin_family      = AF_INET;
     // memcpy(&addr.sin_addr, &in6addr_any, sizeof(in6addr_any));
     addr.sin_port        = htons( portNum );
@@ -156,7 +158,7 @@ void setup( int argc, char *argv[] )
     /* activity after 60 seconds this program will end.           */
     /* timeout value is based on milliseconds.                   */
     /*************************************************************/
-    timeout = ( 60 * 1000 );
+    timeout = ( 6 * 1000 );
 }
 
 
@@ -179,8 +181,8 @@ void serverLoop()
         /***********************************************************/
         if (socketData < 0)
         {
-        perror("  poll() failed");
-        break;
+            perror("  poll() failed");
+            break;
         }
 
         /***********************************************************/
@@ -188,8 +190,8 @@ void serverLoop()
         /***********************************************************/
         if (socketData == 0)
         {
-        printf("  poll() timed out.  End program.\n");
-        break;
+            // printf("  poll() timed out.  End program.\n");
+            break;
         }
 
 
@@ -290,7 +292,7 @@ void serverLoop()
                         {
                             // this is wheer "connection reset by peer" 
                             // is written cus it's perror
-                            perror("  recv() failed");
+                            // perror("  recv() failed");
                             close_conn = true;
 
                         }
@@ -312,12 +314,18 @@ void serverLoop()
                     /* Data was received                                 */
                     /*****************************************************/
                     // printf("  %d bytes received\n", socketData);
+                    if( timeStarted == false )
+                    {
+                        start_time = chrono::system_clock::now();
+                        timeStarted = true;
+                    }
+
                     totalTrans++;
                     string tempBuffer = string( buffer );
-                    cout << "Temp string buffer: " << tempBuffer << endl;
+                    // cout << "Temp string buffer: " << tempBuffer << endl;
                     string commandNumStringFormat = tempBuffer.substr( 0, tempBuffer.find(",") );
                     string clientName = tempBuffer.substr( tempBuffer.find(",") + 1, tempBuffer.length() );
-                    cout << "Clientname: " << clientName << endl;
+                    // cout << "Clientname: " << clientName << endl;
 
 
                     unordered_map<string,int>::iterator it = clients.find( clientName );
@@ -334,7 +342,8 @@ void serverLoop()
 
                     string commandNumInt( commandNumStringFormat );
                     printEpochTime();
-                    cout << "#" << setw(3) << totalTrans << " (T" << setw(3) << commandNumInt << ")" << endl;
+                    cout << "#" << setw(3) << totalTrans << " (T" << setw(3) << 
+                        commandNumInt << ") from " << clientName << endl;
 
                     
 
@@ -351,7 +360,11 @@ void serverLoop()
 
 
                     printEpochTime();
-                    cout << "#" << setw(3) << totalTrans << " (Done)" << endl;
+                    cout << "#" << setw(3) << totalTrans << 
+                        " (Done) from " << clientName << endl;
+                    
+                    elapsed_time = std::chrono::system_clock::now() 
+                        - start_time;
                     /*
                         read the number from the socket
                             if number is EOF, close connection
@@ -369,13 +382,10 @@ void serverLoop()
                     // write( listen_sd, sendBuff, strlen( sendBuff ) );
 
 
-
-
                     /*****************************************************/
                     /* Echo the data back to the client                  */
                     /*****************************************************/
-                    // socketData = send(fds[i].fd, buffer, len, 0);
-                    socketData = send(fds[i].fd, sendBuff, 7, 0);
+                    socketData = send(fds[i].fd, sendBuff, sizeof( sendBuff ), 0);
                     if (socketData < 0)
                     {
                         perror("  send() failed");
@@ -451,9 +461,14 @@ int main (int argc, char *argv[])
 
     cleanUp();
 
+    cout << endl << "SUMMARY" << endl;
     for (auto &e: clients) {
 		// cout << "Client: " << e.first << ", " << e.second << endl;
         cout << setw(4) << e.second << " transactions from " << e.first << endl;
 	}
+    double execution_time = elapsed_time.count();
+    float transPerSec = totalTrans / execution_time;
+    cout << setw(4) << transPerSec << " transactions/sec  (" << totalTrans 
+        << "/" << setprecision(2) << execution_time << ")" << endl;
 }
 

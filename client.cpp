@@ -44,7 +44,6 @@ void Sleep( int n );
 
 int sockfd, n, portNum, ipAddressInt, totalTrans = 0;
 bool commandIsSleep = false;
-char hostnameBuff[1025];
 char recvBuff[1024];
 char sendBuff[1025];
 
@@ -60,11 +59,8 @@ string logFileToWriteTo()
 {
     char hostname[HOST_NAME_MAX];
     gethostname(hostname, HOST_NAME_MAX);       // should get naem of computer
-    string hostPID = to_string( getpid() );
+    hostPID = to_string( getpid() );
     string hostnameStringFormat( hostname );
-
-    // cout << "Computer: " << hostnameStringFormat << endl;
-    // cout << "PID: " << hostPID << endl;
 
     string logFileName = hostnameStringFormat + "." + hostPID + ".log";
     return logFileName;
@@ -83,7 +79,6 @@ string getHostName()
 
 void printStartingInfoToLogFile()
 {
-    hostPID = to_string( getpid() );
     hostname = getHostName();
 
     cout << "Using port " << portNum << endl;
@@ -124,7 +119,6 @@ void setup( int argc, char *argv[] )
 
     memset( recvBuff, '0', sizeof( recvBuff ) );
     memset( sendBuff, '0', sizeof( sendBuff ) );
-    memset( hostnameBuff, '0', sizeof( hostnameBuff ) );
 
     // server can make any socket it wants, but the client
     // has to check if the made socket is the smae as the
@@ -203,11 +197,8 @@ void splitInput( string inputCommand )
     } else if( tOrS == 'T' ) {
         commandIsSleep = false;
         printEpochTime();
-        cout << "Send (" << tOrS << setw(3) << nTime << ")" << endl; 
-        // send the hostname first
-        // snprintf( hostnameBuff, sizeof( hostnameBuff ), "%s", hostnameToSend );
-        // write( sockfd, hostnameBuff, strlen( hostnameBuff ) );
-        string stringToSend = commandNum + "," + getHostName() + "." + hostPID;
+        cout << "Send (" << tOrS << setw(3) << nTime << ")" << endl;
+        string stringToSend = commandNum + "," + hostname + "." + hostPID;
         const char* stuffToSend = stringToSend.c_str();
 
         snprintf( sendBuff, sizeof( sendBuff ), "%s", stuffToSend );
