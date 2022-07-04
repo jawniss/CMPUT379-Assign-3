@@ -20,3 +20,5 @@ serverMan:
 
 clean:
 	@rm -rf server client *.o *.log *.pdf
+	# Windows:
+	# -del server client *.o *.log *.pdf
